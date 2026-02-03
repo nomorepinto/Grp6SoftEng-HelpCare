@@ -14,12 +14,15 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Allow HelpCare to access your camera",
-          "microphonePermission": "Allow HelpCare to access your microphone",
-          "recordAudioPermission": "Allow HelpCare to access your microphone"
+          "cameraPermission": "Allow HelpCare to access your camera"
         }
       ],
-      "expo-media-library"
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Allow app to save photos."
+        }
+      ]
     ],
     "scheme": "helpcare",
     "orientation": "portrait",

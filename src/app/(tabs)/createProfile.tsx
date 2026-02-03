@@ -25,9 +25,9 @@ export default function CreateProfile() {
             medicineSchedule: [],
             appointments: []
         };
-        const profileArray: Profile[] = [];
+        const profileArray = JSON.parse(await AsyncStorage.getItem("profileArray") || "[]");
         profileArray.push(profile);
-        await AsyncStorage.setItem("profile", JSON.stringify(profileArray));
+        await AsyncStorage.setItem("profileArray", JSON.stringify(profileArray));
     };
 
     return (
