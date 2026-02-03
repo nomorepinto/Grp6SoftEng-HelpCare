@@ -3,13 +3,21 @@ import TextBox from '@/components/textBox'; import Button from '@/components/but
 import { useState } from "react";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Profile } from 'types';
+import WarningModal from '@/components/warningModal';
+
 
 export default function CreateProfile() {
     const [patientName, setPatientName] = useState("");
     const [age, setAge] = useState("");
     const [affliction, setAffliction] = useState("");
+    const [warningModalVisible, setWarningModalVisible] = useState(false);
 
     const saveProfile = async () => {
+        if (patientName === "" || age === "" || affliction === "") {
+            setWarningModalVisible(true);
+            return;
+        }
+
         const profile: Profile = {
             name: patientName,
             age: parseInt(age),
@@ -39,6 +47,7 @@ export default function CreateProfile() {
                     <Button placeholder="Next" onPress={() => saveProfile()} width="w-1/2" />
                 </View>
             </View>
+            <WarningModal isOpen={warningModalVisible} onClose={() => setWarningModalVisible(false)} text="Please fill in all fields" />
         </View>
     );
 }

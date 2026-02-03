@@ -10,7 +10,16 @@
       "tsconfigPaths": true
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow HelpCare to access your camera",
+          "microphonePermission": "Allow HelpCare to access your microphone",
+          "recordAudioPermission": "Allow HelpCare to access your microphone"
+        }
+      ],
+      "expo-media-library"
     ],
     "scheme": "helpcare",
     "orientation": "portrait",
