@@ -12,6 +12,7 @@ export default function AddMedicine() {
     const [medicineName, setMedicineName] = useState("");
     const [time, setTime] = useState("");
     const [times, setTimes] = useState<string[]>([]);
+    const [quantity, setQuantity] = useState("");
     const [selectedDays, setSelectedDays] = useState<day[]>([]);
     const [warningModalVisible, setWarningModalVisible] = useState(false);
     const [warningText, setWarningText] = useState("");
@@ -39,14 +40,22 @@ export default function AddMedicine() {
     };
 
     const saveMedicine = async () => {
-        if (medicineName === "" || times.length === 0 || selectedDays.length === 0) {
+        if (medicineName === "" || times.length === 0 || selectedDays.length === 0 || quantity === "") {
             setWarningText("Please fill in all fields");
+            setWarningModalVisible(true);
+            return;
+        }
+
+        const parsedQuantity = Number(quantity);
+        if (Number.isNaN(parsedQuantity) || parsedQuantity <= 0) {
+            setWarningText("Please enter a valid quantity");
             setWarningModalVisible(true);
             return;
         }
 
         const newMedicine: medicine = {
             name: medicineName,
+            quantity: parsedQuantity,
             times: times,
             days: selectedDays
         };
@@ -63,6 +72,7 @@ export default function AddMedicine() {
         // Reset form
         setMedicineName("");
         setTimes([]);
+        setQuantity("");
         setSelectedDays([]);
     };
     
@@ -79,6 +89,15 @@ export default function AddMedicine() {
                             placeholder="Medicine Name" 
                             onChangeText={setMedicineName} 
                             value={medicineName} 
+                        />
+                    </View>
+
+                    <View className="flex flex-col">
+                        <TextBox
+                            width="w-full"
+                            placeholder="Quantity (number)"
+                            onChangeText={setQuantity}
+                            value={quantity}
                         />
                     </View>
 
