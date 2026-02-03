@@ -65,6 +65,7 @@ export default function AddMedicine() {
         setTimes([]);
         setSelectedDays([]);
     };
+    
 
     return (
         <View className="flex-1 items-center justify-center pt-20">
