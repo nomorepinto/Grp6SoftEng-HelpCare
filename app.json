@@ -14,20 +14,29 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Allow HelpCare to access your camera"
+          "cameraPermission": "Allow HelpCare to access your camera",
+          "microphonePermission": "Allow HelpCare to access your microphone",
+          "recordAudioAndroid": true
         }
       ],
       [
         "expo-media-library",
         {
-          "photosPermission": "Allow app to save photos."
+          "photosPermission": "Allow HelpCare to access your photos.",
+          "savePhotosPermission": "Allow HelpCare to save photos.",
+          "isAccessMediaLocationEnabled": true,
+          "granularPermissions": [
+            "audio",
+            "photo"
+          ]
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker"
     ],
     "scheme": "helpcare",
     "orientation": "portrait",
     "icon": "./src/assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./src/assets/splash.png",
       "resizeMode": "contain",
@@ -43,7 +52,8 @@
       "adaptiveIcon": {
         "foregroundImage": "./src/assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.helpcare.app"
     }
   }
 }

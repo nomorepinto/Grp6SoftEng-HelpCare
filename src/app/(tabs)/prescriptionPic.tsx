@@ -1,13 +1,18 @@
 import { useState, useRef } from 'react';
-import { View, Text } from 'react-native';
-import { CameraView, useCameraPermissions } from 'expo-camera';
+import { View, Text, TouchableOpacity } from 'react-native';
+import { CameraView, useCameraPermissions, CameraType } from 'expo-camera';
 import * as MediaLibrary from 'expo-media-library';
 import Button from '@/components/button';
 
-function PrescriptionPic() {
+export default function PrescriptionPic() {
     const [permission, requestPermission] = useCameraPermissions();
     const [mediaPermission, requestMediaPermission] = MediaLibrary.usePermissions();
+    const [cameraType, setCameraType] = useState<CameraType>('back');
     const cameraRef = useRef<CameraView>(null); //token error fix
+
+    const toggleCameraType = () => {
+        setCameraType(current => (current === 'back' ? 'front' : 'back'));
+    };
 
     const takePhoto = async () => {
         if (cameraRef.current) {
@@ -15,8 +20,11 @@ function PrescriptionPic() {
             console.log(photo);
         }
     };
+    if (!permission) {
+        return <View />
+    }
 
-    if (!permission || !mediaPermission) {
+    if (!permission?.granted) {
         return (
             <View className="flex-1 justify-center items-center px-6">
                 <View className="bg-white w-full rounded-3xl p-6 items-center shadow-lg">
@@ -28,13 +36,24 @@ function PrescriptionPic() {
                     </Text>
                     <Button
                         placeholder="Close"
-                        onPress={() => { requestPermission(); requestMediaPermission() }}
+                        onPress={() => { requestPermission() }}
                         width="w-1/2"
                     />
                 </View>
             </View>
         );
     }
+
+    return (
+        <View className="flex-1 w-full h-full justify-center items-center px-6">
+            <CameraView className="flex-1 w-full h-full" facing={cameraType} ref={cameraRef} />
+            <View className="flex flex-row justify-between">
+                <TouchableOpacity className="bg-pink-500 p-3 rounded-lg" onPress={toggleCameraType}>
+                    <Text className="text-white text-xl font-Milliard-Medium">Flip Camera</Text>
+                </TouchableOpacity>
+            </View>
+        </View>
+    );
 }
 
 

@@ -1,4 +1,4 @@
-export type day = "Monday" | "Tuesday" | "Wednesday" | "Thursday" | "Friday" | "Saturday" | "Sunday";
+export type day = "M" | "T" | "W" | "Th" | "F" | "S" | "Su";
 
 export type appointment = {
     name: string;

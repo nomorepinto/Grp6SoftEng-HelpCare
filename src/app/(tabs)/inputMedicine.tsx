@@ -5,8 +5,9 @@ import { useState } from "react";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Profile, medicine, day } from 'types';
 import WarningModal from '@/components/warningModal';
+import DateTimePickerModal from "react-native-modal-datetime-picker";
 
-const DAYS: day[] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+const DAYS: day[] = ["M", "T", "W", "Th", "F", "S", "Su"];
 
 export default function AddMedicine() {
     const [medicineName, setMedicineName] = useState("");
@@ -16,6 +17,7 @@ export default function AddMedicine() {
     const [selectedDays, setSelectedDays] = useState<day[]>([]);
     const [warningModalVisible, setWarningModalVisible] = useState(false);
     const [warningText, setWarningText] = useState("");
+    const [showTimePicker, setShowTimePicker] = useState(false);
 
     const toggleDay = (day: day) => {
         if (selectedDays.includes(day)) {
@@ -33,6 +35,11 @@ export default function AddMedicine() {
         }
         setTimes([...times, time]);
         setTime("");
+    };
+
+    const handleConfirmTime = (date: Date) => {
+        setShowTimePicker(false);
+        setTimes([...times, date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })]);
     };
 
     const removeTime = (index: number) => {
@@ -75,20 +82,18 @@ export default function AddMedicine() {
         setQuantity("");
         setSelectedDays([]);
     };
-    
+
     return (
-        <View className="flex-1 items-center justify-center pt-20">
-           
-            <Text className="text-pink-500 text-3xl font-Milliard-ExtraBold mb-3">Add Medicine</Text>
-            
-            <ScrollView contentContainerStyle={{ alignItems: 'center', paddingBottom: 40 }} className="w-5/6" showsVerticalScrollIndicator={false}>
+        <View className="flex-1 items-center justify-center">
+            <View className="w-5/6 items-center justify-center">
+                <Text className="text-pink-500 text-3xl font-Milliard-ExtraBold mb-5">Add Medicine</Text>
                 <View className="flex flex-col gap-3 w-full">
                     <View className="flex flex-col">
-                        <TextBox 
-                            width="w-full" 
-                            placeholder="Medicine Name" 
-                            onChangeText={setMedicineName} 
-                            value={medicineName} 
+                        <TextBox
+                            width="w-full"
+                            placeholder="Medicine Name"
+                            onChangeText={setMedicineName}
+                            value={medicineName}
                         />
                     </View>
 
@@ -101,51 +106,57 @@ export default function AddMedicine() {
                         />
                     </View>
 
-                    <View className="flex flex-col">
-                        <Text className="text-pink-500 text-lg font-Milliard-Bold mb-2">Times</Text>
-                        <View className="flex flex-row gap-2">
-                            <View className="flex-1">
-                                <TextBox 
-                                    width="w-full" 
-                                    placeholder="Time (e.g., 8:00 AM)" 
-                                    onChangeText={setTime} 
-                                    value={time} 
-                                />
-                            </View>
-                            <Button placeholder="Add" onPress={addTime} width="w-20" />
+                    <View className="flex flex-col mt-5 mb-5">
+                        <Text className="text-pink-500 text-xl font-Milliard-Heavy mb-2">Times</Text>
+                        <View className="flex flex-row w-full justify-between">
+                            <Button placeholder="Add Time" onPress={() => setShowTimePicker(true)} width="w-full" />
                         </View>
-                        {times.length > 0 && (
-                            <View className="flex flex-col gap-2 mt-2">
-                                {times.map((t, index) => (
-                                    <View key={index} className="flex flex-row justify-between items-center bg-pink-100 p-3 rounded-lg">
-                                        <Text className="text-pink-500 font-Milliard-Medium">{t}</Text>
-                                        <TouchableOpacity onPress={() => removeTime(index)}>
-                                            <Text className="text-pink-500 font-Milliard-Bold">✕</Text>
-                                        </TouchableOpacity>
-                                    </View>
-                                ))}
-                            </View>
-                        )}
+                        <DateTimePickerModal
+                            isVisible={showTimePicker}
+                            mode="time"
+                            onConfirm={(date) => {
+                                handleConfirmTime(date);
+                            }}
+                            onCancel={() => setShowTimePicker(false)}
+                        />
+                        <View className="max-h-40">
+                            <ScrollView className="flex-grow-0">
+                                <View className="flex flex-col gap-2 mt-2 ">
+                                    {times.length === 0 ? (
+                                        <View className="flex flex-row justify-center items-center border border-pink-500 rounded-3xl p-5 opacity-50">
+                                            <Text className="text-pink-500 text-3xl font-Milliard-ExtraBold">No times added</Text>
+                                        </View>
+                                    ) : (
+                                        times.map((t, index) => (
+                                            <View key={index} className="flex flex-row justify-between items-center bg-pink-100 p-3 rounded-lg">
+                                                <Text className="text-pink-500 text-xl font-Milliard-Medium">{t}</Text>
+                                                <TouchableOpacity onPress={() => removeTime(index)}>
+                                                    <Text className="text-pink-500 text-xl font-Milliard-Bold">✕</Text>
+                                                </TouchableOpacity>
+                                            </View>
+                                        ))
+                                    )}
+                                </View>
+                            </ScrollView>
+                        </View>
                     </View>
 
                     <View className="flex flex-col">
-                        <Text className="text-pink-500 text-lg font-Milliard-Bold mb-2">Days</Text>
-                        <View className="flex flex-row flex-wrap gap-2">
+                        <Text className="text-pink-500 text-xl font-Milliard-Heavy mb-2">Days</Text>
+                        <View className="flex flex-row justify-between">
                             {DAYS.map((day) => (
                                 <TouchableOpacity
                                     key={day}
                                     onPress={() => toggleDay(day)}
-                                    className={`px-4 py-2 rounded-lg ${
-                                        selectedDays.includes(day) 
-                                            ? 'bg-pink-500' 
-                                            : 'bg-pink-100'
-                                    }`}
+                                    className={`px-4 py-2 rounded-xl border border-pink-600 ${selectedDays.includes(day)
+                                        ? 'bg-pink-500'
+                                        : 'bg-pink-100'
+                                        }`}
                                 >
-                                    <Text className={`font-Milliard-Medium ${
-                                        selectedDays.includes(day) 
-                                            ? 'text-white' 
-                                            : 'text-pink-500'
-                                    }`}>
+                                    <Text className={`font-Milliard-Medium ${selectedDays.includes(day)
+                                        ? 'text-white'
+                                        : 'text-pink-500'
+                                        }`}>
                                         {day.substring(0, 3)}
                                     </Text>
                                 </TouchableOpacity>
@@ -153,16 +164,16 @@ export default function AddMedicine() {
                         </View>
                     </View>
 
-                    <View className="flex flex-row justify-end mt-4">
+                    <View className="flex flex-row justify-end mt-6">
                         <Button placeholder="Save" onPress={saveMedicine} width="w-1/2" />
                     </View>
                 </View>
-            </ScrollView>
-            <WarningModal 
-                isOpen={warningModalVisible} 
-                onClose={() => setWarningModalVisible(false)} 
-                text={warningText} 
-            />
+                <WarningModal
+                    isOpen={warningModalVisible}
+                    onClose={() => setWarningModalVisible(false)}
+                    text={warningText}
+                />
+            </View>
         </View>
     );
 }

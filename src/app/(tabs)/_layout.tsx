@@ -9,6 +9,8 @@ export default function TabLayout() {
             }}
         >
             <Tabs.Screen name="index" />
+            <Tabs.Screen name="inputMedicine" />
+            <Tabs.Screen name="prescriptionPic" />
         </Tabs>
     );
 }
