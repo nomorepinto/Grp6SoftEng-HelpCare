@@ -1,59 +1,84 @@
-import { useState, useRef } from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
-import { CameraView, useCameraPermissions, CameraType } from 'expo-camera';
-import * as MediaLibrary from 'expo-media-library';
+import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
+import { useState, useEffect, useRef } from 'react';
+import { Text, View, StyleSheet, Image, ScrollView, Pressable } from 'react-native';
 import Button from '@/components/button';
+import WarningModal from '@/components/warningModal';
+import PhotoModal from '@/components/photoModal';
 
 export default function PrescriptionPic() {
     const [permission, requestPermission] = useCameraPermissions();
-    const [mediaPermission, requestMediaPermission] = MediaLibrary.usePermissions();
-    const [cameraType, setCameraType] = useState<CameraType>('back');
-    const cameraRef = useRef<CameraView>(null); //token error fix
+    const [tutorialModalVisible, setTutorialModalVisible] = useState(false);
+    const [photos, setPhotos] = useState<string[]>([]);
+    const [photoModalVisible, setPhotoModalVisible] = useState(false);
+    const [selectedPhoto, setSelectedPhoto] = useState<string>('');
+    const cameraRef = useRef<CameraView>(null);
 
-    const toggleCameraType = () => {
-        setCameraType(current => (current === 'back' ? 'front' : 'back'));
-    };
-
-    const takePhoto = async () => {
+    async function takePicture() {
         if (cameraRef.current) {
             const photo = await cameraRef.current.takePictureAsync();
             console.log(photo);
+            setPhotos([...photos, photo.uri]);
         }
-    };
-    if (!permission) {
-        return <View />
     }
 
-    if (!permission?.granted) {
+    useEffect(() => {
+        setTutorialModalVisible(true);
+    }, []);
+
+    if (!permission) {
+        // Camera permissions are still loading.
+        return <View className="flex-1 bg-white" />;
+    }
+
+    if (!permission.granted) {
+        // Camera permissions are not granted yet.
         return (
-            <View className="flex-1 justify-center items-center px-6">
-                <View className="bg-white w-full rounded-3xl p-6 items-center shadow-lg">
-                    <Text className="text-pink-500 text-3xl font-Milliard-ExtraBold mb-4 text-center">
-                        Warning
-                    </Text>
-                    <Text className="text-slate-700 text-xl font-Milliard-Medium mb-8 text-center">
-                        Camera and Media Library permissions are required to use this feature.
-                    </Text>
-                    <Button
-                        placeholder="Close"
-                        onPress={() => { requestPermission() }}
-                        width="w-1/2"
-                    />
-                </View>
+            <View className="flex-1 justify-center items-center px-6 bg-white">
+                <Text className="text-center pb-6 text-pink-500 font-Milliard-Medium text-xl">
+                    We need your permission to show the camera
+                </Text>
+                <Button placeholder="Grant Permission" onPress={requestPermission} width="w-3/4" />
             </View>
         );
     }
 
+    function deletePhoto() {
+        setPhotos(photos.filter((photo) => photo !== selectedPhoto));
+        setSelectedPhoto('');
+        setPhotoModalVisible(false);
+    }
+
     return (
-        <View className="flex-1 w-full h-full justify-center items-center px-6">
-            <CameraView className="flex-1 w-full h-full" facing={cameraType} ref={cameraRef} />
-            <View className="flex flex-row justify-between">
-                <TouchableOpacity className="bg-pink-500 p-3 rounded-lg" onPress={toggleCameraType}>
-                    <Text className="text-white text-xl font-Milliard-Medium">Flip Camera</Text>
-                </TouchableOpacity>
+        <View className="flex-1">
+            <CameraView style={styles.camera} facing={'back'} ref={cameraRef} />
+            <View className="flex flex-col justify-center items-center bg-transparent h-[35%] w-[90%] ml-5">
+                <View className="flex flex-row gap-5 border border-pink-500 rounded-3xl mb-2 px-3 py-2">
+                    <ScrollView
+                        horizontal={true}
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={{ gap: 5 }}
+                        className="rounded-xl"
+                    >
+                        {photos.map((photo, index) => (
+                            <Pressable key={index} onPress={() => { setSelectedPhoto(photo); setPhotoModalVisible(true) }}>
+                                <Image source={{ uri: photo }} className="w-20 h-28 rounded-lg border border-white" resizeMode="cover" />
+                            </Pressable>
+                        ))}
+                    </ScrollView>
+                </View>
+                <View className="flex flex-col gap-2 justify-center items-center w-full">
+                    <Button placeholder="Take Picture" onPress={() => takePicture()} width="w-full" />
+                    <Button placeholder="Upload Photos" onPress={() => { }} width="w-full" />
+                </View>
             </View>
+            <WarningModal header='Tutorial' isOpen={tutorialModalVisible} onClose={() => setTutorialModalVisible(false)} text="Take a picture of your prescription to automatically add your medicine schedule" />
+            <PhotoModal isOpen={photoModalVisible} onClose={() => setPhotoModalVisible(false)} photo={selectedPhoto} deletePhoto={deletePhoto} />
         </View>
     );
 }
 
-
+const styles = StyleSheet.create({
+    camera: {
+        flex: 1,
+    },
+});

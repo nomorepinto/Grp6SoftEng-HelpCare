@@ -169,6 +169,7 @@ export default function AddMedicine() {
                     </View>
                 </View>
                 <WarningModal
+                    header="Warning"
                     isOpen={warningModalVisible}
                     onClose={() => setWarningModalVisible(false)}
                     text={warningText}

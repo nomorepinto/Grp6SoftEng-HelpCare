@@ -47,7 +47,7 @@ export default function CreateProfile() {
                     <Button placeholder="Next" onPress={() => saveProfile()} width="w-1/2" />
                 </View>
             </View>
-            <WarningModal isOpen={warningModalVisible} onClose={() => setWarningModalVisible(false)} text="Please fill in all fields" />
+            <WarningModal header='Warning' isOpen={warningModalVisible} onClose={() => setWarningModalVisible(false)} text="Please fill in all fields" />
         </View>
     );
 }

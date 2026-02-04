@@ -6,9 +6,10 @@ interface WarningModalProps {
     isOpen: boolean;
     onClose: () => void;
     text: string;
+    header: string;
 }
 
-export default function WarningModal({ isOpen, onClose, text }: WarningModalProps) {
+export default function WarningModal({ isOpen, onClose, text, header }: WarningModalProps) {
     return (
         <Modal
             animationType="slide"
@@ -19,7 +20,7 @@ export default function WarningModal({ isOpen, onClose, text }: WarningModalProp
             <View className="flex-1 justify-center items-center px-6">
                 <View className="bg-white w-full rounded-3xl p-6 items-center shadow-lg">
                     <Text className="text-pink-500 text-3xl font-Milliard-ExtraBold mb-4 text-center">
-                        Warning
+                        {header}
                     </Text>
 
                     <Text className="text-slate-700 text-xl font-Milliard-Medium mb-8 text-center">
