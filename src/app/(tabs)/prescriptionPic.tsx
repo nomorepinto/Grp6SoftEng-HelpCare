@@ -7,7 +7,7 @@ import Button from '@/components/button';
 function PrescriptionPic() {
     const [permission, requestPermission] = useCameraPermissions();
     const [mediaPermission, requestMediaPermission] = MediaLibrary.usePermissions();
-    const cameraRef = useRef(null);
+    const cameraRef = useRef<CameraView>(null); //token error fix
 
     const takePhoto = async () => {
         if (cameraRef.current) {
