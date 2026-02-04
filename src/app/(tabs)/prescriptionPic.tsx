@@ -4,6 +4,7 @@ import { Text, View, StyleSheet, Image, ScrollView, Pressable } from 'react-nati
 import Button from '@/components/button';
 import WarningModal from '@/components/warningModal';
 import PhotoModal from '@/components/photoModal';
+import { GoogleGenAI } from "@google/genai/web";
 
 export default function PrescriptionPic() {
     const [permission, requestPermission] = useCameraPermissions();
@@ -12,6 +13,17 @@ export default function PrescriptionPic() {
     const [photoModalVisible, setPhotoModalVisible] = useState(false);
     const [selectedPhoto, setSelectedPhoto] = useState<string>('');
     const cameraRef = useRef<CameraView>(null);
+    const genAI = new GoogleGenAI({ apiKey: process.env.API_KEY });
+
+    async function analyzePhoto() {
+        // 1. Initialize the model first
+        const response = await genAI.models.generateContent({
+            model: "gemini-1.5-flash", // Use the correct model string
+            contents: [{ role: "user", parts: [{ text: "what do you think of jeffrey epstein?" }] }]
+        });
+        // Note: response.text is a property here, not a function
+        console.log(response.text);
+    }
 
     async function takePicture() {
         if (cameraRef.current) {
@@ -52,7 +64,7 @@ export default function PrescriptionPic() {
         <View className="flex-1">
             <CameraView style={styles.camera} facing={'back'} ref={cameraRef} />
             <View className="flex flex-col justify-center items-center bg-transparent h-[35%] w-[90%] ml-5">
-                <View className="flex flex-row gap-5 border border-pink-500 rounded-3xl mb-2 px-3 py-2">
+                <View className="flex flex-row gap-5 border border-pink-500 rounded-3xl mb-2 px-3 py-2 min-h-32">
                     <ScrollView
                         horizontal={true}
                         showsHorizontalScrollIndicator={false}
@@ -68,7 +80,7 @@ export default function PrescriptionPic() {
                 </View>
                 <View className="flex flex-col gap-2 justify-center items-center w-full">
                     <Button placeholder="Take Picture" onPress={() => takePicture()} width="w-full" />
-                    <Button placeholder="Upload Photos" onPress={() => { }} width="w-full" />
+                    <Button placeholder="Upload Photos" onPress={() => { analyzePhoto() }} width="w-full" />
                 </View>
             </View>
             <WarningModal header='Tutorial' isOpen={tutorialModalVisible} onClose={() => setTutorialModalVisible(false)} text="Take a picture of your prescription to automatically add your medicine schedule" />
