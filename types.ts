@@ -8,6 +8,7 @@ export type appointment = {
 
 export type medicine = {
     name: string;
+    quantity: number;
     times: string[];
     days: day[];
 };
