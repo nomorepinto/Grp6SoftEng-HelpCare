@@ -1,10 +1,15 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import { Profile, medicine, day } from 'types';
 
 const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.EXPO_PUBLIC_GEMINI_API_KEY}`;
 
-
+const sampleMedicine: medicine = {
+    name: "Amoxicillin",
+    quantity: 1,
+    times: ["08:00", "20:00"],
+    days: ["M", "T", "W", "Th", "F", "S", "Su"]
+}
 
 export const testGemini = async () => {
     try {
@@ -28,7 +33,22 @@ export const testGemini = async () => {
 
 export const askGemini = async (dataBase64: string) => {
     try {
-        const prompt = "Analyze the image. Return a JSON that will satisfy the following type: \n\n\ntype Medicine = {\n    name: string;\n    dose: string;\n    frequency: string;\n    duration: string;\n}; if the identified image is not a prescription, set the name to 'not a prescription' and all other values blank";
+        const prompt = `Act as a medical data extractor. Analyze the image and return an JSON objects. Return one JSON object for each medicine found in the image, put all these objects into an array and return an array of JSON objects.
+    
+        Type Definition:
+        type day = "M" | "T" | "W" | "Th" | "F" | "S" | "Su";
+        type Medicine = {
+            name: string;
+            quantity: number;
+            times: string[]; // 24h format
+            days: day[];
+        };
+
+        Constraint: If the image is not a prescription, return: {"name": "not a prescription", "quantity": 0, "times": [], "days": []}
+
+        Example Output:
+        ${JSON.stringify(sampleMedicine)}`;
+
         const requestBody = {
             contents: [{
                 role: "user",
@@ -41,12 +61,29 @@ export const askGemini = async (dataBase64: string) => {
                         }
                     }
                 ]
-            }]
+            }],
+            generationConfig: {
+                response_mime_type: "application/json",
+                response_schema: {
+                    type: "ARRAY",
+                    items: {
+                        type: "OBJECT",
+                        properties: {
+                            name: { type: "STRING" },
+                            quantity: { type: "NUMBER" },
+                            times: { type: "ARRAY", items: { type: "STRING" } },
+                            days: { type: "ARRAY", items: { type: "STRING" } },
+                        },
+                        required: ["name", "quantity", "times", "days"],
+                    },
+                },
+            },
         };
 
         const response = await axios.post(url, requestBody);
-
-        console.log(response.data.candidates[0].content.parts[0].text);
+        const result: medicine[] = JSON.parse(response.data.candidates[0].content.parts[0].text);
+        console.log(result);
+        return result;
 
     } catch (error: any) {
         // Axios catches 4xx and 5xx errors automatically

@@ -1,5 +1,12 @@
 export type day = "M" | "T" | "W" | "Th" | "F" | "S" | "Su";
 
+export const sampleMedicine: medicine = {
+    name: "Amoxicillin",
+    quantity: 1,
+    times: ["08:00", "20:00"],
+    days: ["M", "W", "F"]
+};
+
 export type appointment = {
     name: string;
     date: number;
