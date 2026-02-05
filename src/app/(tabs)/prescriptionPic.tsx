@@ -52,7 +52,7 @@ export default function PrescriptionPic() {
                 }
             }
         } catch (error) {
-            setWarningText("Failed to upload photos. Please try again.");
+            setWarningText("Failed to upload photos.");
             setWarningModalVisible(true);
             console.error("Error uploading photos:", error);
         } finally {
@@ -72,13 +72,9 @@ export default function PrescriptionPic() {
         }
     }
 
-    useEffect(() => {
-        setTutorialModalVisible(true);
-    }, []);
-
     useFocusEffect(
         useCallback(() => {
-            setPhotos([]);
+            setTutorialModalVisible(true);
         }, [])
     );
 
@@ -115,40 +111,50 @@ export default function PrescriptionPic() {
     }
 
     return (
-        <View className="flex-1">
-            <CameraView style={styles.camera} facing={'back'} ref={cameraRef} />
-            <View className="flex flex-col justify-center items-center bg-transparent h-[35%] w-[90%] ml-5">
-                <View className="flex flex-row gap-5 border border-pink-500 rounded-3xl mb-2 px-3 py-2 min-h-32">
-                    {photos.length === 0 ? (
-                        <View className="w-full justify-self-center self-center text-center justify-center items-center">
-                            <Text className="text-pink-500 font-Milliard-Heavy text-2xl opacity-50">No photos taken yet</Text>
-                        </View>
-                    ) : (
-                        <ScrollView
-                            horizontal={true}
-                            showsHorizontalScrollIndicator={false}
-                            contentContainerStyle={{ gap: 5 }}
-                            className="rounded-xl border"
-                        >
-                            {
-                                photos.map((photo: any, index: any) => (
-                                    <Pressable key={index} onPress={() => { setSelectedPhoto(photo.uri); setPhotoModalVisible(true) }}>
-                                        <Image source={{ uri: photo.uri }} className="w-20 h-28 rounded-lg border border-white" resizeMode="cover" />
-                                    </Pressable>
-                                ))
-                            }
-                        </ScrollView>
-                    )}
+        <>
+            <View className="flex-1">
+                <CameraView style={styles.camera} facing={'back'} ref={cameraRef} />
+                <View className="flex flex-col justify-center items-center bg-transparent h-[36%] w-[90%] ml-5">
+                    <View className="flex flex-row gap-5 border border-pink-500 rounded-3xl mb-2 px-3 py-2 min-h-32">
+                        {photos.length === 0 ? (
+                            <View className="w-full justify-self-center self-center text-center justify-center items-center">
+                                <Text className="text-pink-500 font-Milliard-Heavy text-2xl opacity-50">No photos taken yet</Text>
+                            </View>
+                        ) : (
+                            <ScrollView
+                                horizontal={true}
+                                showsHorizontalScrollIndicator={false}
+                                contentContainerStyle={{ gap: 5 }}
+                                className="rounded-xl border"
+                            >
+                                {
+                                    photos.map((photo: any, index: any) => (
+                                        <Pressable key={index} onPress={() => { setSelectedPhoto(photo.uri); setPhotoModalVisible(true) }}>
+                                            <Image source={{ uri: photo.uri }} className="w-20 h-28 rounded-lg border border-white" resizeMode="cover" />
+                                        </Pressable>
+                                    ))
+                                }
+                            </ScrollView>
+                        )}
+                    </View>
+                    <View className="flex flex-col gap-2 justify-center items-center w-full">
+                        <Button placeholder="Take Picture" onPress={() => takePicture()} width="w-full" />
+                        <Button placeholder="Upload Photos"
+                            onPress={() => {
+                                photos.length > 0 ? photos.map((photo: any) => uploadPhotos(photo)) : setWarningText("No photos taken yet"); setWarningModalVisible(true);
+                            }}
+                            width="w-full" />
+
+                    </View>
+                    <View className="flex flex-col gap-2 justify-center items-end w-full mt-2">
+                        <Button placeholder="Skip" onPress={() => router.push("/medStock")} width="w-1/2" />
+                    </View>
                 </View>
-                <View className="flex flex-col gap-2 justify-center items-center w-full">
-                    <Button placeholder="Take Picture" onPress={() => takePicture()} width="w-full" />
-                    <Button placeholder="Upload Photos" onPress={() => photos.map((photo: any) => uploadPhotos(photo))} width="w-full" />
-                </View>
+                <WarningModal header='Tutorial' isOpen={tutorialModalVisible} onClose={() => setTutorialModalVisible(false)} text="Take a picture of your prescription to automatically add your medicine schedule" />
+                <WarningModal header={warningText} isOpen={warningModalVisible} onClose={() => setWarningModalVisible(false)} text="Please try again." />
+                <PhotoModal isOpen={photoModalVisible} onClose={() => setPhotoModalVisible(false)} photo={selectedPhoto} deletePhoto={deletePhoto} />
             </View>
-            <WarningModal header='Tutorial' isOpen={tutorialModalVisible} onClose={() => setTutorialModalVisible(false)} text="Take a picture of your prescription to automatically add your medicine schedule" />
-            <WarningModal header={warningText} isOpen={warningModalVisible} onClose={() => setWarningModalVisible(false)} text="Failed to upload photos. Please try again." />
-            <PhotoModal isOpen={photoModalVisible} onClose={() => setPhotoModalVisible(false)} photo={selectedPhoto} deletePhoto={deletePhoto} />
-        </View>
+        </>
     );
 }
 
