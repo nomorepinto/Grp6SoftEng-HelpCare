@@ -19,5 +19,6 @@ export type Profile = {
     affliction: string;
     medicineSchedule: medicine[];
     appointments: appointment[];
+    isSelected: boolean;
 };
 

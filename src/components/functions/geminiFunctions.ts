@@ -1,33 +1,49 @@
 import axios from 'axios';
-import { File } from 'expo-file-system';
 
-const apiKey = () => {
+
+const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.EXPO_PUBLIC_GEMINI_API_KEY}`;
+
+
+export const testGemini = async () => {
     try {
-        return process.env.EXPO_PUBLIC_GEMINI_API_KEY;
+        const requestBody = {
+            contents: [{
+                role: "user",
+                parts: [
+                    { text: "Name 5 fruits." },
+                ]
+            }]
+        };
+
+        const response = await axios.post(url, requestBody);
+
+        console.log(response.data.candidates[0].content.parts[0].text);
     } catch (error: any) {
-        console.log("No API key found.")
+        console.error("Status:", error.response?.status);
+        console.error("Message:", error.response?.data);
     }
 }
 
-const convertUriToBase64 = async (uri: string) => {
-    const file = new File(uri);
-    const base64 = await file.base64();
-    return base64;
-};
-
-export const askGemini = async (prompt: string) => {
+export const askGemini = async (dataBase64: string) => {
     try {
-        const response = await axios.post(
-            'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
-            {
-                contents: [{ parts: [{ text: prompt }] }]
-            },
-            {
-                params: { key: apiKey() }
-            }
-        );
 
-        // Axios automatically parses JSON, so you go straight to .data
+        const requestBody = {
+            contents: [{
+                role: "user",
+                parts: [
+                    { text: "Analyze the image. Return medicine name, dose, frequency, and duration." },
+                    {
+                        inlineData: {
+                            data: dataBase64, // Ensure this is just the base64 string, no "data:image/jpeg;base64," prefix
+                            mimeType: "image/jpeg"
+                        }
+                    }
+                ]
+            }]
+        };
+
+        const response = await axios.post(url, requestBody);
+
         console.log(response.data.candidates[0].content.parts[0].text);
     } catch (error: any) {
         // Axios catches 4xx and 5xx errors automatically

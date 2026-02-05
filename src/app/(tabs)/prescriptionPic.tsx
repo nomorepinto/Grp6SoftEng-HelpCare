@@ -4,25 +4,25 @@ import { Text, View, StyleSheet, Image, ScrollView, Pressable } from 'react-nati
 import Button from '@/components/button';
 import WarningModal from '@/components/warningModal';
 import PhotoModal from '@/components/photoModal';
-import { askGemini } from '@/components/functions/geminiFunctions';
+import { askGemini, testGemini } from '@/components/functions/geminiFunctions';
 
 
 export default function PrescriptionPic() {
     const [permission, requestPermission] = useCameraPermissions();
     const [tutorialModalVisible, setTutorialModalVisible] = useState(false);
-    const [photos, setPhotos] = useState<string[]>([]);
+    const [photos, setPhotos] = useState<any>([]);
     const [photoModalVisible, setPhotoModalVisible] = useState(false);
     const [selectedPhoto, setSelectedPhoto] = useState<string>('');
     const cameraRef = useRef<CameraView>(null);
 
-
-
-
     async function takePicture() {
         if (cameraRef.current) {
-            const photo = await cameraRef.current.takePictureAsync();
-            console.log(photo);
-            setPhotos([...photos, photo.uri]);
+            const photo = await cameraRef.current.takePictureAsync({
+                quality: 1,
+                base64: true,
+            });
+            setPhotos([...photos, photo]);
+            console.log("Photo Taken" + photos.length);
         }
     }
 
@@ -48,7 +48,7 @@ export default function PrescriptionPic() {
     }
 
     function deletePhoto() {
-        setPhotos(photos.filter((photo) => photo !== selectedPhoto));
+        setPhotos(photos.filter((photo: any) => photo !== selectedPhoto));
         setSelectedPhoto('');
         setPhotoModalVisible(false);
     }
@@ -64,16 +64,16 @@ export default function PrescriptionPic() {
                         contentContainerStyle={{ gap: 5 }}
                         className="rounded-xl"
                     >
-                        {photos.map((photo, index) => (
-                            <Pressable key={index} onPress={() => { setSelectedPhoto(photo); setPhotoModalVisible(true) }}>
-                                <Image source={{ uri: photo }} className="w-20 h-28 rounded-lg border border-white" resizeMode="cover" />
+                        {photos.map((photo: any, index: any) => (
+                            <Pressable key={index} onPress={() => { setSelectedPhoto(photo.uri); setPhotoModalVisible(true) }}>
+                                <Image source={{ uri: photo.uri }} className="w-20 h-28 rounded-lg border border-white" resizeMode="cover" />
                             </Pressable>
                         ))}
                     </ScrollView>
                 </View>
                 <View className="flex flex-col gap-2 justify-center items-center w-full">
                     <Button placeholder="Take Picture" onPress={() => takePicture()} width="w-full" />
-                    <Button placeholder="Upload Photos" onPress={() => { askGemini('what do you think of donald trump and jeff epstein') }} width="w-full" />
+                    <Button placeholder="Upload Photos" onPress={() => { photos.map((photo: any) => askGemini(photo.base64)) }} width="w-full" />
                 </View>
             </View>
             <WarningModal header='Tutorial' isOpen={tutorialModalVisible} onClose={() => setTutorialModalVisible(false)} text="Take a picture of your prescription to automatically add your medicine schedule" />

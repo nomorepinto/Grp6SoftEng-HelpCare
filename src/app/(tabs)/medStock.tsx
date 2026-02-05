@@ -1,60 +1,56 @@
 import { View, Text, ScrollView, Pressable } from 'react-native';
-import { useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'expo-router';
 import Button from '@/components/button';
-import { medicine, day } from 'types';
+import { medicine, day, Profile } from 'types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-//might need to base on actual database later
-const dayLabels: Record<day, string> = {
-    'M': 'Monday',
-    'T': 'Tuesday',
-    'W': 'Wednesday',
-    'Th': 'Thursday',
-    'F': 'Friday',
-    'S': 'Saturday',
-    'Su': 'Sunday',
-};
+import { useFocusEffect } from 'expo-router';
 
 const MedicineItem = ({
     med,
     onDelete,
-    formatDays
+    days
 }: {
     med: medicine;
     onDelete: () => void;
-    formatDays: (days: day[]) => string
+    days: day[];
 }) => (
     <View className="border border-pink-300 rounded-2xl p-4 bg-pink-50">
-        <Text className="text-lg font-Milliard-Medium text-pink-500 mb-3">
+        <Text className="text-xl font-Milliard-Heavy text-pink-500 mb-3">
             {med.name}
         </Text>
+        <View className="flex flex-row w-full gap-2 mb-2">
+            <View className="w-1/4">
+                <Text className="text-lg font-Milliard-Medium text-pink-500">
+                    Quantity
+                </Text>
+                <Text className="text-base text-gray-700">
+                    {med.quantity} pills
+                </Text>
+            </View>
 
-        <View className="mb-3">
-            <Text className="text-sm font-Milliard-Medium text-gray-600">
-                Quantity
-            </Text>
-            <Text className="text-base text-gray-800">
-                {med.quantity} pills
-            </Text>
+            <View className="w-3/4">
+                <Text className="text-lg font-Milliard-Medium text-pink-500">
+                    Times
+                </Text>
+                <Text className="text-base text-gray-700">
+                    {med.times.join(', ')}
+                </Text>
+            </View>
         </View>
 
-        <View className="mb-3">
-            <Text className="text-sm font-Milliard-Medium text-gray-600">
-                Times
-            </Text>
-            <Text className="text-base text-gray-800">
-                {med.times.join(', ')}
-            </Text>
-        </View>
 
         <View className="mb-4">
-            <Text className="text-sm font-Milliard-Medium text-gray-600">
+            <Text className="text-lg font-Milliard-Medium text-pink-500">
                 Days
             </Text>
-            <Text className="text-base text-gray-800">
-                {formatDays(med.days)}
-            </Text>
+            <View className="flex flex-row gap-2">
+                {days.map((day, index) => (
+                    <View key={index} className="justify-center items-center bg-pink-100 border border-pink-500 rounded-3xl px-3 py-1">
+                        <Text className="text-pink-500 text-sm font-Milliard-ExtraBold">{day}</Text>
+                    </View>
+                ))}
+            </View>
         </View>
 
         <Pressable
@@ -71,34 +67,46 @@ const MedicineItem = ({
 export default function MedStock() {
     const router = useRouter();
 
-    /*  const saveMedicine = async (medicine: medicine) => {
-            const medicines = JSON.parse(await AsyncStorage.getItem('medicines') || '[]');
-            medicines.push(medicine);
-            await AsyncStorage.setItem('medicines', JSON.stringify(medicines));
-        };*/
+    const getMedicines = async () => {
+        const profileArray = JSON.parse(await AsyncStorage.getItem("profileArray") ?? "[]");
+        try {
+            if (profileArray.length > 0) {
+                const currentProfile = profileArray.find((profile: Profile) => profile.isSelected);
+                if (currentProfile) {
+                    setMedicines(currentProfile.medicineSchedule);
+                    console.log("Medicine Array Loaded")
+                }
+            }
+        } catch (error) {
+            console.error("Error fetching medicines:", error);
+        }
+    }
 
-    // Sample medicine data - to be replaced
-    const [medicines, setMedicines] = useState<medicine[]>([
-        {
-            name: 'Aspirin',
-            quantity: 30,
-            times: ['08:00 AM', '08:00 PM'],
-            days: ['M', 'T', 'W', 'Th', 'F', 'S', 'Su'],
-        },
-        {
-            name: 'Vitamin D',
-            quantity: 60,
-            times: ['09:00 AM'],
-            days: ['M', 'W', 'F'],
-        },
-    ]);
+    const [medicines, setMedicines] = useState<medicine[]>([]);
 
-    const deleteMedicine = (index: number) => {
-        setMedicines(medicines.filter((_, i) => i !== index));
-    };
+    useFocusEffect(
+        useCallback(() => {
+            getMedicines();
+        }, [])
+    );
 
-    const formatDays = (days: day[]) => {
-        return days.map(d => dayLabels[d]).join(', ');
+    const deleteMedicine = async (index: number) => {
+
+        const updatedMedicines = medicines.filter((_, i) => i !== index);
+        setMedicines(updatedMedicines);
+        const profileArray = JSON.parse(await AsyncStorage.getItem("profileArray") ?? "[]");
+        try {
+            if (profileArray.length > 0) {
+                const currentProfile = profileArray.find((profile: Profile) => profile.isSelected);
+                if (currentProfile) {
+                    currentProfile.medicineSchedule = updatedMedicines;
+                    await AsyncStorage.setItem("profileArray", JSON.stringify(profileArray));
+                    console.log("Medicine Deleted")
+                }
+            }
+        } catch (error) {
+            console.error("Error deleting medicine:", error);
+        }
     };
 
     return (
@@ -123,7 +131,7 @@ export default function MedStock() {
                                 key={index}
                                 med={med}
                                 onDelete={() => deleteMedicine(index)}
-                                formatDays={formatDays}
+                                days={med.days}
                             />
                         ))}
                     </View>

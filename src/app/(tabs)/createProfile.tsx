@@ -4,30 +4,43 @@ import { useState } from "react";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Profile } from 'types';
 import WarningModal from '@/components/warningModal';
+import { useRouter } from 'expo-router';
 
 
 export default function CreateProfile() {
+    const router = useRouter();
     const [patientName, setPatientName] = useState("");
     const [age, setAge] = useState("");
     const [affliction, setAffliction] = useState("");
     const [warningModalVisible, setWarningModalVisible] = useState(false);
 
     const saveProfile = async () => {
-        if (patientName === "" || age === "" || affliction === "") {
-            setWarningModalVisible(true);
-            return;
-        }
+        try {
+            if (patientName === "" || age === "" || affliction === "") {
+                setWarningModalVisible(true);
+                return;
+            }
 
-        const profile: Profile = {
-            name: patientName,
-            age: parseInt(age),
-            affliction: affliction,
-            medicineSchedule: [],
-            appointments: []
-        };
-        const profileArray = JSON.parse(await AsyncStorage.getItem("profileArray") || "[]");
-        profileArray.push(profile);
-        await AsyncStorage.setItem("profileArray", JSON.stringify(profileArray));
+            const profile: Profile = {
+                name: patientName,
+                age: parseInt(age),
+                affliction: affliction,
+                medicineSchedule: [],
+                appointments: [],
+                isSelected: true
+            };
+            const profileArray = JSON.parse(await AsyncStorage.getItem("profileArray") ?? "[]");
+
+            profileArray.forEach((profile: Profile) => {
+                profile.isSelected = false;
+            });
+            profileArray.push(profile);
+            await AsyncStorage.setItem("profileArray", JSON.stringify(profileArray));
+            console.log("New Profile Saved")
+            router.replace("/medStock");
+        } catch (error) {
+            console.error("Error saving profile:", error);
+        }
     };
 
     return (
