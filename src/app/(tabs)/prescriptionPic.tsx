@@ -4,7 +4,8 @@ import { Text, View, StyleSheet, Image, ScrollView, Pressable } from 'react-nati
 import Button from '@/components/button';
 import WarningModal from '@/components/warningModal';
 import PhotoModal from '@/components/photoModal';
-import { GoogleGenAI } from "@google/genai/web";
+import { askGemini } from '@/components/functions/geminiFunctions';
+
 
 export default function PrescriptionPic() {
     const [permission, requestPermission] = useCameraPermissions();
@@ -13,17 +14,9 @@ export default function PrescriptionPic() {
     const [photoModalVisible, setPhotoModalVisible] = useState(false);
     const [selectedPhoto, setSelectedPhoto] = useState<string>('');
     const cameraRef = useRef<CameraView>(null);
-    const genAI = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-    async function analyzePhoto() {
-        // 1. Initialize the model first
-        const response = await genAI.models.generateContent({
-            model: "gemini-1.5-flash", // Use the correct model string
-            contents: [{ role: "user", parts: [{ text: "what do you think of jeffrey epstein?" }] }]
-        });
-        // Note: response.text is a property here, not a function
-        console.log(response.text);
-    }
+
+
 
     async function takePicture() {
         if (cameraRef.current) {
@@ -80,7 +73,7 @@ export default function PrescriptionPic() {
                 </View>
                 <View className="flex flex-col gap-2 justify-center items-center w-full">
                     <Button placeholder="Take Picture" onPress={() => takePicture()} width="w-full" />
-                    <Button placeholder="Upload Photos" onPress={() => { analyzePhoto() }} width="w-full" />
+                    <Button placeholder="Upload Photos" onPress={() => { askGemini('what do you think of donald trump and jeff epstein') }} width="w-full" />
                 </View>
             </View>
             <WarningModal header='Tutorial' isOpen={tutorialModalVisible} onClose={() => setTutorialModalVisible(false)} text="Take a picture of your prescription to automatically add your medicine schedule" />
