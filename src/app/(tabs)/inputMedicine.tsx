@@ -6,10 +6,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Profile, medicine, day } from 'types';
 import WarningModal from '@/components/warningModal';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
+import { useRouter } from 'expo-router';
 
 const DAYS: day[] = ["M", "T", "W", "Th", "F", "S", "Su"];
 
 export default function AddMedicine() {
+    const router = useRouter();
     const [medicineName, setMedicineName] = useState("");
     const [time, setTime] = useState("");
     const [times, setTimes] = useState<string[]>([]);
@@ -18,6 +20,22 @@ export default function AddMedicine() {
     const [warningModalVisible, setWarningModalVisible] = useState(false);
     const [warningText, setWarningText] = useState("");
     const [showTimePicker, setShowTimePicker] = useState(false);
+
+    const saveMedicineToProfile = async (newMedicine: medicine) => {
+        try {
+            const profileArray = JSON.parse(await AsyncStorage.getItem("profileArray") ?? "[]");
+            if (profileArray.length > 0) {
+                const currentProfile = profileArray.find((profile: Profile) => profile.isSelected);
+                if (currentProfile) {
+                    currentProfile.medicineSchedule.push(newMedicine);
+                    await AsyncStorage.setItem("profileArray", JSON.stringify(profileArray));
+                    console.log("New Medicine Added")
+                }
+            }
+        } catch (error) {
+            console.error("Error saving medicine:", error);
+        }
+    }
 
     const toggleDay = (day: day) => {
         if (selectedDays.includes(day)) {
@@ -68,19 +86,15 @@ export default function AddMedicine() {
         };
 
         // Add medicine to the current profile's schedule
-        const profileArray: Profile[] = JSON.parse(await AsyncStorage.getItem("profileArray") || "[]");
-        if (profileArray.length > 0) {
-            // Assuming you want to add to the last/current profile
-            const currentProfile = profileArray[profileArray.length - 1];
-            currentProfile.medicineSchedule.push(newMedicine);
-            await AsyncStorage.setItem("profileArray", JSON.stringify(profileArray));
-        }
+        await saveMedicineToProfile(newMedicine);
 
         // Reset form
         setMedicineName("");
         setTimes([]);
         setQuantity("");
         setSelectedDays([]);
+
+        router.replace("/medStock");
     };
 
     return (
