@@ -80,7 +80,7 @@ export default function PrescriptionPic() {
 
     if (!permission) {
         // Camera permissions are still loading.
-        return <View className="flex-1 bg-white" />;
+        return <View className="flex-1 bg-pink-50" />;
     }
 
     if (!permission.granted) {
@@ -91,6 +91,7 @@ export default function PrescriptionPic() {
                     We need your permission to show the camera
                 </Text>
                 <Button placeholder="Grant Permission" onPress={requestPermission} width="w-3/4" />
+                <Button placeholder="Skip" onPress={() => router.push("/medStock")} width="w-3/4 mt-2" />
             </View>
         );
     }
@@ -99,7 +100,7 @@ export default function PrescriptionPic() {
         return (
             <View className="flex-1 justify-center items-center bg-white">
                 <ActivityIndicator size="large" color="#FF69B4" />
-                <Text className="text-pink-500 font-Milliard-Medium text-2xl opacity-50">Extracting Medicine Schedule...</Text>
+                <Text className="text-pink-500 font-Milliard-Medium text-lg opacity-50 mt-6">Extracting Medicine Schedule...</Text>
             </View>
         );
     }
@@ -112,7 +113,7 @@ export default function PrescriptionPic() {
 
     return (
         <>
-            <View className="flex-1">
+            <View className="flex-1 bg-white">
                 <CameraView style={styles.camera} facing={'back'} ref={cameraRef} />
                 <View className="flex flex-col justify-center items-center bg-transparent h-[36%] w-[90%] ml-5">
                     <View className="flex flex-row gap-5 border border-pink-500 rounded-3xl mb-2 px-3 py-2 min-h-32">

@@ -140,6 +140,7 @@ export default function MedStock() {
 
             <View className="px-6 py-4 border-t border-pink-200">
                 <Button placeholder="Add Medicine" width="w-full" onPress={() => router.push('/inputMedicine')} />
+                <Button placeholder="Done" width="w-full mt-2" onPress={() => router.push('/')} />
             </View>
         </View>
     );

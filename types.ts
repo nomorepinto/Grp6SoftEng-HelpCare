@@ -1,6 +1,7 @@
 export type day = "M" | "T" | "W" | "Th" | "F" | "S" | "Su";
 
 export const sampleMedicine: medicine = {
+    id: "1",
     name: "Amoxicillin",
     quantity: 1,
     times: ["08:00", "20:00"],
@@ -8,12 +9,14 @@ export const sampleMedicine: medicine = {
 };
 
 export type appointment = {
+    id: string;
     name: string;
     date: number;
     time: string;
 }
 
 export type medicine = {
+    id: string;
     name: string;
     quantity: number;
     times: string[];
@@ -21,6 +24,7 @@ export type medicine = {
 };
 
 export type Profile = {
+    id: string;
     name: string;
     age: number;
     affliction: string;

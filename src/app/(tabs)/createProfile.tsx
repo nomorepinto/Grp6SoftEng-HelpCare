@@ -5,6 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Profile } from 'types';
 import WarningModal from '@/components/warningModal';
 import { useRouter } from 'expo-router';
+import * as Crypto from 'expo-crypto';
 
 
 export default function CreateProfile() {
@@ -22,6 +23,7 @@ export default function CreateProfile() {
             }
 
             const profile: Profile = {
+                id: Crypto.randomUUID(),
                 name: patientName,
                 age: parseInt(age),
                 affliction: affliction,
@@ -33,18 +35,20 @@ export default function CreateProfile() {
 
             profileArray.forEach((profile: Profile) => {
                 profile.isSelected = false;
+                console.log(profile.name + " set to false")
             });
+
             profileArray.push(profile);
             await AsyncStorage.setItem("profileArray", JSON.stringify(profileArray));
             console.log("New Profile Saved")
-            router.replace("/medStock");
+            router.replace("/prescriptionPic");
         } catch (error) {
             console.error("Error saving profile:", error);
         }
     };
 
     return (
-        <View className="flex-1 items-center justify-center">
+        <View className="flex-1 items-center justify-center bg-white">
             <Text className="text-pink-500 text-3xl font-Milliard-ExtraBold mb-3">Create Profile</Text>
             <View className="flex flex-col w-5/6 gap-3">
                 <View className="flex flex-col">

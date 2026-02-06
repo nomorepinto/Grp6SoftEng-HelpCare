@@ -7,6 +7,7 @@ import { Profile, medicine, day } from 'types';
 import WarningModal from '@/components/warningModal';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { useRouter } from 'expo-router';
+import * as Crypto from 'expo-crypto';
 
 const DAYS: day[] = ["M", "T", "W", "Th", "F", "S", "Su"];
 
@@ -79,6 +80,7 @@ export default function AddMedicine() {
         }
 
         const newMedicine: medicine = {
+            id: Crypto.randomUUID(),
             name: medicineName,
             quantity: parsedQuantity,
             times: times,
@@ -98,7 +100,7 @@ export default function AddMedicine() {
     };
 
     return (
-        <View className="flex-1 items-center justify-center">
+        <View className="flex-1 items-center justify-center bg-white">
             <View className="w-5/6 items-center justify-center">
                 <Text className="text-pink-500 text-3xl font-Milliard-ExtraBold mb-5">Add Medicine</Text>
                 <View className="flex flex-col gap-3 w-full">
