@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Modal, View, Text, ScrollView } from 'react-native';
 import Button from './button';
 import { medicine } from '../../types';
+import { format24to12 } from './functions/timeUtils';
 
 interface MedInfoModalProps {
   isOpen: boolean;
@@ -61,7 +62,7 @@ export default function MedInfoModal({
               </Text>
               <View className="border border-slate-300 rounded-xl px-4 py-3 bg-slate-50">
                 <Text className="text-slate-600 text-base font-Milliard-Medium">
-                  {medData?.times?.join(', ') || 'N/A'}
+                  {medData?.times?.map(format24to12).join(', ') || 'N/A'}
                 </Text>
               </View>
             </View>

@@ -5,6 +5,8 @@ import Button from '@/components/button';
 import { medicine, day, Profile } from 'types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from 'expo-router';
+import clsx from 'clsx';
+import { format24to12 } from '@/components/functions/timeUtils';
 
 const MedicineItem = ({
     med,
@@ -15,39 +17,42 @@ const MedicineItem = ({
     onDelete: () => void;
     days: day[];
 }) => (
-    <View className="border border-pink-300 rounded-2xl p-4 bg-pink-50">
-        <Text className="text-xl font-Milliard-Heavy text-pink-500 mb-3">
+    <View className={`border border-gray-200 rounded-2xl p-4 ${med.color}`}>
+        <Text className="text-2xl font-Milliard-Heavy text-gray-700">
             {med.name}
         </Text>
-        <View className="flex flex-row w-full gap-2 mb-2">
-            <View className="w-1/4">
-                <Text className="text-lg font-Milliard-Medium text-pink-500">
-                    Quantity
-                </Text>
-                <Text className="text-base text-gray-700">
-                    {med.quantity} pills
-                </Text>
-            </View>
-
-            <View className="w-3/4">
-                <Text className="text-lg font-Milliard-Medium text-pink-500">
-                    Times
-                </Text>
-                <Text className="text-base text-gray-700">
-                    {med.times.join(', ')}
+        <View className="flex flex-row w-full gap-2 mb-2 items-center">
+            <Text className="text-xl font-Milliard-Medium text-gray-700">
+                Quantity:
+            </Text>
+            <View className="rounded-full bg-gray-100 border border-gray-300 px-3 py-1 ">
+                <Text className="text-sm text-gray-700 font-Milliard-Heavy">
+                    {med.amountRemaining} / {med.amountBought}
                 </Text>
             </View>
         </View>
-
-
-        <View className="mb-4">
-            <Text className="text-lg font-Milliard-Medium text-pink-500">
-                Days
+        <View className="flex flex-row gap-2 mb-2 items-center">
+            <Text className="text-xl font-Milliard-Medium text-gray-700">
+                Times:
             </Text>
-            <View className="flex flex-row gap-2">
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-1">
+                <View className="flex flex-row gap-2">
+                    {med.times.map((time, index) => (
+                        <View key={index} className="rounded-full bg-gray-100 border border-gray-300 px-3 py-1">
+                            <Text className="text-gray-700 text-sm font-Milliard-Heavy">{format24to12(time)}</Text>
+                        </View>
+                    ))}
+                </View>
+            </ScrollView>
+        </View>
+        <View className="mb-4 flex flex-row gap-3">
+            <Text className="text-xl font-Milliard-Medium text-gray-700">
+                Days:
+            </Text>
+            <View className="flex flex-row gap-1">
                 {days.map((day, index) => (
-                    <View key={index} className="justify-center items-center bg-pink-100 border border-pink-500 rounded-3xl px-3 py-1">
-                        <Text className="text-pink-500 text-sm font-Milliard-ExtraBold">{day}</Text>
+                    <View key={index} className="justify-center items-center bg-gray-100 border border-gray-300 rounded-full px-3 py-1">
+                        <Text className="text-gray-700 text-sm font-Milliard-ExtraBold">{day}</Text>
                     </View>
                 ))}
             </View>
@@ -55,9 +60,9 @@ const MedicineItem = ({
 
         <Pressable
             onPress={onDelete}
-            className="bg-red-100 rounded-lg py-2 px-4"
+            className="rounded-full py-2 px-4  active:bg-slate-300 bg-red-400"
         >
-            <Text className="text-red-600 font-Milliard-Medium text-center">
+            <Text className="font-Milliard-Medium text-center text-white">
                 Delete
             </Text>
         </Pressable>
@@ -110,38 +115,43 @@ export default function MedStock() {
     };
 
     return (
-        <View className="flex-1 bg-white pt-10 justify-between">
-            <View className="px-6 py-6 border-b border-pink-200">
-                <Text className="text-2xl font-Milliard-ExtraBold text-pink-500">
+        <>
+            <View className="px-6 pt-16 pb-5 bg-white items-center justify-center">
+                <Text className="text-3xl font-Milliard-ExtraBold text-pink-500">
                     Medicine Stock
                 </Text>
             </View>
+            <View className="flex-1 bg-gray-150 justify-between">
 
-            <ScrollView className="flex-1 px-6 py-4">
-                {medicines.length === 0 ? (
-                    <View className="flex-1 justify-center items-center py-12">
-                        <Text className="text-gray-400 text-base">
-                            No medicines added yet
-                        </Text>
-                    </View>
-                ) : (
-                    <View className="gap-4">
-                        {medicines.map((med, index) => (
-                            <MedicineItem
-                                key={index}
-                                med={med}
-                                onDelete={() => deleteMedicine(index)}
-                                days={med.days}
-                            />
-                        ))}
-                    </View>
-                )}
-            </ScrollView>
 
-            <View className="px-6 py-4 border-t border-pink-200">
-                <Button placeholder="Add Medicine" width="w-full" onPress={() => router.push('/inputMedicine')} />
+                <ScrollView className="flex-1 px-6 py-4">
+                    {medicines.length === 0 ? (
+                        <View className="flex-1 justify-center items-center py-12">
+                            <Text className="text-gray-400 text-base">
+                                No medicines added yet
+                            </Text>
+                        </View>
+                    ) : (
+                        <View className="gap-4">
+                            {medicines.map((med, index) => (
+                                <MedicineItem
+                                    key={index}
+                                    med={med}
+                                    onDelete={() => deleteMedicine(index)}
+                                    days={med.days}
+                                />
+                            ))}
+                        </View>
+                    )}
+                </ScrollView>
+            </View>
+            <View className="px-6 pt-4 pb-6 bg-white">
+                <View className="flex flex-row justify-between">
+                    <Button placeholder="Add Medicine" width="w-[49%]" onPress={() => router.push('/inputMedicine')} />
+                    <Button placeholder="Scan Medicine" width="w-[49%]" onPress={() => router.push('/prescriptionPic')} />
+                </View>
                 <Button placeholder="Done" width="w-full mt-2" onPress={() => router.push('/')} />
             </View>
-        </View>
+        </>
     );
 }

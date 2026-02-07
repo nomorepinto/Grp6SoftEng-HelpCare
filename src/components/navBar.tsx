@@ -20,14 +20,14 @@ export default function NavBar({ profileArray, selectProfile }: { profileArray: 
     }
 
     return (
-        <View className="flex flex-row bg-pink-500 pt-16 pb-5 px-5 justify-between">
+        <View className="flex flex-row bg-white pt-16 pb-5 px-5 justify-between">
             <View className="flex flex-row w-1/3 justify-start">
-                <Text className="text-white text-3xl font-Milliard-ExtraBold">Schedule</Text>
+                <Text className="text-pink-500 text-3xl font-Milliard-ExtraBold">Schedule</Text>
             </View>
 
-            <Pressable className="flex flex-row w-[40%] rounded-3xl border border-white px-5 ml-5 bg-pink-50 justify-between" onPress={() => setProfileDropdown(!profileDropdown)}>
-                <Text className="text-pink-500 text-2xl font-Milliard-ExtraBold">{profileArray.map((profile: Profile) => profile.isSelected ? profile.name : "")}</Text>
-                <FontAwesome name="caret-down" size={30} color="#FF69B4" className="self-center" />
+            <Pressable className="flex flex-row w-[40%] rounded-3xl border border-pink-500 px-5 ml-5 bg-pink-500 justify-between" onPress={() => setProfileDropdown(!profileDropdown)}>
+                <Text className="text-white text-2xl font-Milliard-ExtraBold">{profileArray.map((profile: Profile) => profile.isSelected ? profile.name : "")}</Text>
+                <FontAwesome name="caret-down" size={30} color="white" className="self-center" />
             </Pressable>
 
             {

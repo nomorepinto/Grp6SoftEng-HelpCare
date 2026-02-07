@@ -55,7 +55,7 @@ export default function CreateProfile() {
                     <TextBox width="w-full" placeholder="Patient Name" onChangeText={setPatientName} value={patientName} />
                 </View>
                 <View className="flex flex-col">
-                    <TextBox width="w-full" placeholder="Age" onChangeText={setAge} value={age} />
+                    <TextBox width="w-full" placeholder="Age" onChangeText={setAge} value={age} isNumeric />
                 </View>
                 <View className="flex flex-col">
                     <TextBox width="w-full" placeholder="Affliction" onChangeText={setAffliction} value={affliction} />

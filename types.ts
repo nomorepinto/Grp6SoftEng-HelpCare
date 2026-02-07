@@ -5,7 +5,11 @@ export const sampleMedicine: medicine = {
     name: "Amoxicillin",
     quantity: 1,
     times: ["08:00", "20:00"],
-    days: ["M", "W", "F"]
+    days: ["M", "W", "F"],
+    amountBought: 1,
+    amountRemaining: 1,
+    color: "bg-blue-500",
+
 };
 
 export type appointment = {
@@ -21,6 +25,10 @@ export type medicine = {
     quantity: number;
     times: string[];
     days: day[];
+    amountBought: number;
+    amountRemaining: number;
+    color: string;
+
 };
 
 export type Profile = {
@@ -33,3 +41,12 @@ export type Profile = {
     isSelected: boolean;
 };
 
+export type groupedMedsByHours = {
+    hour: string;
+    medicines: medicine[];
+}
+
+export type groupedMedsByDays = {
+    day: day;
+    medicines: medicine[];
+}

@@ -8,6 +8,7 @@ import WarningModal from '@/components/warningModal';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { useRouter } from 'expo-router';
 import * as Crypto from 'expo-crypto';
+import { format24to12 } from '@/components/functions/timeUtils';
 
 const DAYS: day[] = ["M", "T", "W", "Th", "F", "S", "Su"];
 
@@ -17,10 +18,33 @@ export default function AddMedicine() {
     const [time, setTime] = useState("");
     const [times, setTimes] = useState<string[]>([]);
     const [quantity, setQuantity] = useState("");
+    const [amountBought, setAmountBought] = useState("");
     const [selectedDays, setSelectedDays] = useState<day[]>([]);
     const [warningModalVisible, setWarningModalVisible] = useState(false);
     const [warningText, setWarningText] = useState("");
     const [showTimePicker, setShowTimePicker] = useState(false);
+
+    const colorArray = [
+        "bg-red-100",
+        "bg-amber-100",
+        "bg-lime-100",
+        "bg-emerald-100",
+        "bg-cyan-100",
+        "bg-blue-100",
+        "bg-violet-100",
+        "bg-fuchsia-100"
+    ];
+
+    const getColorIndex = async () => {
+        const color = await AsyncStorage.getItem("colorIndex");
+        if (color) {
+            await AsyncStorage.setItem("colorIndex", ((Number(color) + 1) % colorArray.length).toString());
+            return Number(color);
+        } else {
+            await AsyncStorage.setItem("colorIndex", "1");
+            return 0;
+        }
+    }
 
     const saveMedicineToProfile = async (newMedicine: medicine) => {
         try {
@@ -58,7 +82,10 @@ export default function AddMedicine() {
 
     const handleConfirmTime = (date: Date) => {
         setShowTimePicker(false);
-        setTimes([...times, date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })]);
+        const hours = date.getHours().toString().padStart(2, '0');
+        const minutes = date.getMinutes().toString().padStart(2, '0');
+        const time24 = `${hours}:${minutes}`;
+        setTimes([...times, time24]);
     };
 
     const removeTime = (index: number) => {
@@ -79,12 +106,22 @@ export default function AddMedicine() {
             return;
         }
 
+        const parsedAmountBought = Number(amountBought);
+        if (Number.isNaN(parsedAmountBought) || parsedAmountBought <= 0) {
+            setWarningText("Please enter a valid amount bought");
+            setWarningModalVisible(true);
+            return;
+        }
+
         const newMedicine: medicine = {
             id: Crypto.randomUUID(),
             name: medicineName,
             quantity: parsedQuantity,
             times: times,
-            days: selectedDays
+            days: selectedDays,
+            amountBought: parsedAmountBought,
+            amountRemaining: parsedAmountBought,
+            color: colorArray[await getColorIndex()]
         };
 
         // Add medicine to the current profile's schedule
@@ -95,7 +132,17 @@ export default function AddMedicine() {
         setTimes([]);
         setQuantity("");
         setSelectedDays([]);
+        setAmountBought("");
 
+        router.replace("/medStock");
+    };
+
+    const handleCancel = () => {
+        setMedicineName("");
+        setTimes([]);
+        setQuantity("");
+        setSelectedDays([]);
+        setAmountBought("");
         router.replace("/medStock");
     };
 
@@ -119,6 +166,17 @@ export default function AddMedicine() {
                             placeholder="Quantity (number)"
                             onChangeText={setQuantity}
                             value={quantity}
+                            isNumeric
+                        />
+                    </View>
+
+                    <View className="flex flex-col">
+                        <TextBox
+                            width="w-full"
+                            placeholder="Amount Bought (number)"
+                            onChangeText={setAmountBought}
+                            value={amountBought}
+                            isNumeric
                         />
                     </View>
 
@@ -130,6 +188,8 @@ export default function AddMedicine() {
                         <DateTimePickerModal
                             isVisible={showTimePicker}
                             mode="time"
+                            display="spinner"
+                            minuteInterval={30}
                             onConfirm={(date) => {
                                 handleConfirmTime(date);
                             }}
@@ -145,7 +205,7 @@ export default function AddMedicine() {
                                     ) : (
                                         times.map((t, index) => (
                                             <View key={index} className="flex flex-row justify-between items-center bg-pink-100 p-3 rounded-lg">
-                                                <Text className="text-pink-500 text-xl font-Milliard-Medium">{t}</Text>
+                                                <Text className="text-pink-500 text-xl font-Milliard-Medium">{format24to12(t)}</Text>
                                                 <TouchableOpacity onPress={() => removeTime(index)}>
                                                     <Text className="text-pink-500 text-xl font-Milliard-Bold">✕</Text>
                                                 </TouchableOpacity>
@@ -180,8 +240,9 @@ export default function AddMedicine() {
                         </View>
                     </View>
 
-                    <View className="flex flex-row justify-end mt-6">
-                        <Button placeholder="Save" onPress={saveMedicine} width="w-1/2" />
+                    <View className="flex flex-row justify-between mt-6 ">
+                        <Button placeholder="Cancel" onPress={() => router.replace("/medStock")} width="w-[48%]" />
+                        <Button placeholder="Save" onPress={saveMedicine} width="w-[48%]" />
                     </View>
                 </View>
                 <WarningModal
