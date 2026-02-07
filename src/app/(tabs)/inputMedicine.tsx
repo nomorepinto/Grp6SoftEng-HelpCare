@@ -1,7 +1,7 @@
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import TextBox from '@/components/textBox';
 import Button from '@/components/button';
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Profile, medicine, day } from 'types';
 import WarningModal from '@/components/warningModal';
@@ -9,6 +9,7 @@ import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { useRouter } from 'expo-router';
 import * as Crypto from 'expo-crypto';
 import { format24to12 } from '@/components/functions/timeUtils';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 
 const DAYS: day[] = ["M", "T", "W", "Th", "F", "S", "Su"];
 
@@ -23,6 +24,16 @@ export default function AddMedicine() {
     const [warningModalVisible, setWarningModalVisible] = useState(false);
     const [warningText, setWarningText] = useState("");
     const [showTimePicker, setShowTimePicker] = useState(false);
+
+    const opacity = useSharedValue(1);
+
+    useEffect(() => {
+        opacity.value = withTiming((warningModalVisible || showTimePicker) ? 0.5 : 1, { duration: 300 });
+    }, [warningModalVisible, showTimePicker]);
+
+    const animatedStyle = useAnimatedStyle(() => ({
+        opacity: opacity.value,
+    }));
 
     const colorArray = [
         "bg-red-100",
@@ -147,7 +158,7 @@ export default function AddMedicine() {
     };
 
     return (
-        <View className="flex-1 items-center justify-center bg-white">
+        <Animated.View style={[{ flex: 1 }, animatedStyle]} className="items-center justify-center bg-white">
             <View className="w-5/6 items-center justify-center">
                 <Text className="text-pink-500 text-3xl font-Milliard-ExtraBold mb-5">Add Medicine</Text>
                 <View className="flex flex-col gap-3 w-full">
@@ -252,6 +263,6 @@ export default function AddMedicine() {
                     text={warningText}
                 />
             </View>
-        </View>
+        </Animated.View>
     );
 }

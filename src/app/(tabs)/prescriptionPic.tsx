@@ -9,6 +9,7 @@ import { useFocusEffect } from 'expo-router';
 import { medicine, Profile, sampleMedicine } from 'types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 
 
 export default function PrescriptionPic() {
@@ -23,7 +24,21 @@ export default function PrescriptionPic() {
     const [warningModalVisible, setWarningModalVisible] = useState(false);
     const [warningText, setWarningText] = useState("");
 
+    const isAnyModalOpen = tutorialModalVisible || photoModalVisible || warningModalVisible;
+
+    const opacity = useSharedValue(1);
+
+    useEffect(() => {
+        opacity.value = withTiming(isAnyModalOpen ? 0.5 : 1, { duration: 300 });
+    }, [isAnyModalOpen]);
+
+    const animatedStyle = useAnimatedStyle(() => ({
+        opacity: opacity.value,
+    }));
+
     const saveMedicineToProfile = async (newMedicine: medicine) => {
+        // ... (trimmed)
+
         try {
             const profileArray = JSON.parse(await AsyncStorage.getItem("profileArray") ?? "[]");
             if (profileArray.length > 0) {
@@ -112,7 +127,7 @@ export default function PrescriptionPic() {
     }
 
     return (
-        <>
+        <Animated.View style={[{ flex: 1 }, animatedStyle]}>
             <View className="flex-1 bg-white">
                 <CameraView style={styles.camera} facing={'back'} ref={cameraRef} />
                 <View className="flex flex-col justify-center items-center bg-transparent h-[36%] w-[90%] ml-5">
@@ -155,7 +170,7 @@ export default function PrescriptionPic() {
                 <WarningModal header={warningText} isOpen={warningModalVisible} onClose={() => setWarningModalVisible(false)} text="Please try again." />
                 <PhotoModal isOpen={photoModalVisible} onClose={() => setPhotoModalVisible(false)} photo={selectedPhoto} deletePhoto={deletePhoto} />
             </View>
-        </>
+        </Animated.View>
     );
 }
 

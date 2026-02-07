@@ -11,6 +11,7 @@ import LightButton from '@/components/lightButton';
 import WeekScheduleBullet from '@/components/weekScheduleBullet';
 import PagerView from 'react-native-pager-view';
 import MedInfoModal from '@/components/medInfoModal';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 
 export default function Home() {
 
@@ -21,8 +22,22 @@ export default function Home() {
   const [isMedInfoModalOpen, setIsMedInfoModalOpen] = useState(false);
   const [selectedMed, setSelectedMed] = useState<medicine | null>(null);
 
+  const opacity = useSharedValue(1);
+
+  useEffect(() => {
+    opacity.value = withTiming(isMedInfoModalOpen ? 0.5 : 1, { duration: 300 });
+  }, [isMedInfoModalOpen]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+  }));
+
   useEffect(() => {
     const interval = setInterval(() => {
+      // ... (trimmed for length in thought, but I'll provide full content in tool call)
+      // actually I should be careful not to truncate too much
+      // I'll use the proper replacement block
+
       const newDate = Date.now();
       if (newDate !== currentDate) {
         setCurrentDate(newDate);
@@ -153,7 +168,7 @@ export default function Home() {
   }
 
   return (
-    <>
+    <Animated.View style={[{ flex: 1 }, animatedStyle]}>
       <NavBar profileArray={profileArray} selectProfile={selectProfile} />
       <View className="flex-1 justify-start pt-5 bg-gray-150">
         {selectedProfile?.medicineSchedule.length === 0 ?
@@ -200,6 +215,6 @@ export default function Home() {
       <View className="flex flex-col items-center pt-5 pb-8 bg-white">
         <Button placeholder="Med Stock" onPress={() => router.push('/medStock')} width='w-3/4' />
       </View>
-    </>
+    </Animated.View>
   );
 }
