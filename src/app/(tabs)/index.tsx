@@ -4,11 +4,12 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useRouter, useFocusEffect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NavBar from '@/components/navBar';
-import { Profile, medicine, groupedMedsByHours, groupedMedsByDays, day, sampleMedicine } from 'types';
+import { Profile, medicine, groupedMedsByHours, groupedMedsByDays, day, sampleMedicine, appointment, groupedAppointmentsByDate } from 'types';
 import DayScheduleBullet from '@/components/dayScheduleBullet';
 import Button from '@/components/button';
 import LightButton from '@/components/lightButton';
 import WeekScheduleBullet from '@/components/weekScheduleBullet';
+import AppointmentBullet from '@/components/appointmentBullet';
 import PagerView from 'react-native-pager-view';
 import MedInfoModal from '@/components/medInfoModal';
 import Animated, {
@@ -16,6 +17,8 @@ import Animated, {
   interpolateColor,
   withTiming
 } from 'react-native-reanimated';
+import { Calendar } from '@marceloterreiro/flash-calendar';
+
 
 
 export default function Home() {
@@ -26,6 +29,30 @@ export default function Home() {
   const [currentDate, setCurrentDate] = useState(Date.now());
   const [isMedInfoModalOpen, setIsMedInfoModalOpen] = useState(false);
   const [selectedMed, setSelectedMed] = useState<medicine | null>(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      const fetchProfiles = async () => {
+        try {
+          const storedProfiles = await AsyncStorage.getItem('profileArray');
+          if (storedProfiles && storedProfiles.length > 0) {
+            console.log("Profiles fetched successfully [index.tsx]");
+            setProfileArray(JSON.parse(storedProfiles));
+          } else {
+            router.replace('/createProfile');
+          }
+        } catch (e) {
+          console.error("Failed to fetch profiles [index.tsx]", e);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      fetchProfiles();
+    }, []));
+
+  const selectedProfile = useMemo(() => {
+    return profileArray.find((profile: Profile) => profile.isSelected);
+  }, [profileArray]);
 
   const opacity = useSharedValue(0);
 
@@ -79,29 +106,7 @@ export default function Home() {
     }
   }
 
-  useFocusEffect(
-    useCallback(() => {
-      const fetchProfiles = async () => {
-        try {
-          const storedProfiles = await AsyncStorage.getItem('profileArray');
-          if (storedProfiles && storedProfiles.length > 0) {
-            console.log("Profiles fetched successfully [index.tsx]");
-            setProfileArray(JSON.parse(storedProfiles));
-          } else {
-            router.replace('/createProfile');
-          }
-        } catch (e) {
-          console.error("Failed to fetch profiles [index.tsx]", e);
-        } finally {
-          setIsLoading(false);
-        }
-      };
-      fetchProfiles();
-    }, []));
 
-  const selectedProfile = useMemo(() => {
-    return profileArray.find((profile: Profile) => profile.isSelected);
-  }, [profileArray]);
 
   const hours: groupedMedsByHours[] = useMemo(() => {
     if (!selectedProfile?.medicineSchedule) return [];
@@ -167,6 +172,29 @@ export default function Home() {
     return groupedDays;
   }, [selectedProfile]);
 
+  const groupedAppointments: groupedAppointmentsByDate[] = useMemo(() => {
+    if (!selectedProfile?.appointments) return [];
+
+    const grouped = selectedProfile.appointments.reduce((acc: { [key: number]: appointment[] }, app) => {
+      const date = new Date(app.date);
+      date.setHours(0, 0, 0, 0);
+      const timestamp = date.getTime();
+
+      if (!acc[timestamp]) {
+        acc[timestamp] = [];
+      }
+      acc[timestamp].push(app);
+      return acc;
+    }, {});
+
+    return Object.entries(grouped)
+      .map(([timestamp, appointments]) => ({
+        date: parseInt(timestamp),
+        appointments: appointments.sort((a, b) => a.time.localeCompare(b.time))
+      }))
+      .sort((a, b) => a.date - b.date);
+  }, [selectedProfile]);
+
   if (isLoading) {
     return (
       <View className="flex-1 justify-center items-center bg-white">
@@ -193,7 +221,7 @@ export default function Home() {
               onPageSelected={(e) => setCurrentPage(e.nativeEvent.position)}
             >
               <View key="1" className="flex flex-col gap-2 w-full h-full ml-5">
-                <Text className="text-gray-700 font-Milliard-ExtraBold text-3xl ml-2">{dayMap[new Date(currentDate).getDay()]}</Text>
+                <Text className="text-gray-700 font-Milliard-ExtraBold text-3xl rounded-full bg-white px-5 py-2 w-[90%]">{dayMap[new Date(currentDate).getDay()]}</Text>
                 <ScrollView className="flex-1">
                   {hours.map((hour: groupedMedsByHours, index: number) => (
                     <DayScheduleBullet key={index} hour={hour} selectMedicine={(medicine: medicine) => {
@@ -213,6 +241,36 @@ export default function Home() {
                     }} />
                   ))}
                 </ScrollView>
+              </View>
+
+              <View key="3" className="flex flex-col gap-2 w-full h-full ml-5">
+                <Text className="text-gray-700 font-Milliard-ExtraBold text-3xl rounded-full bg-white px-5 py-2 w-[90%]">Doctor's Appointments</Text>
+                <View className="rounded-3xl bg-white px-5 py-8 w-[90%]">
+                  <Calendar
+                    calendarMonthId={new Date(currentDate).toISOString().split('T')[0].substring(0, 7) + '-01'}
+                    onCalendarDayPress={dateId => {
+                      console.log('selected day', dateId);
+                    }}
+                    calendarActiveDateRanges={selectedProfile?.appointments.map((appointment: appointment) => ({
+                      startId: new Date(appointment.date).toISOString().split('T')[0],
+                      endId: new Date(appointment.date).toISOString().split('T')[0]
+                    }))}
+                  />
+                </View>
+                <View className="max-h-[40%]">
+                  <ScrollView className="flex-grow-0">
+                    {groupedAppointments.map((group, index) => (
+                      <AppointmentBullet
+                        key={index}
+                        dayAppointments={group}
+                        onPress={(app) => {
+                          console.log("Appointment pressed", app);
+                        }}
+                      />
+                    ))}
+                  </ScrollView>
+                </View>
+                <Button placeholder="Add Appointment" onPress={() => router.push('/addAppointment')} width='w-[90%]' />
               </View>
 
             </PagerView>

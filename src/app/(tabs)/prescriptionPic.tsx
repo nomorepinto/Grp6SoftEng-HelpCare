@@ -9,6 +9,8 @@ import { useFocusEffect } from 'expo-router';
 import { medicine, Profile, sampleMedicine } from 'types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
+
 
 
 export default function PrescriptionPic() {
@@ -22,6 +24,24 @@ export default function PrescriptionPic() {
     const [isLoading, setIsLoading] = useState(false);
     const [warningModalVisible, setWarningModalVisible] = useState(false);
     const [warningText, setWarningText] = useState("");
+
+    const opacity = useSharedValue(0);
+
+
+    const animatedStyle = useAnimatedStyle(() => {
+        return {
+            opacity: withTiming(opacity.value, { duration: 50 })
+        };
+    });
+
+    useEffect(() => {
+        if (tutorialModalVisible || warningModalVisible || photoModalVisible) {
+            opacity.value = withTiming(0.25);
+        } else {
+            opacity.value = withTiming(1);
+        }
+    }, [tutorialModalVisible, warningModalVisible, photoModalVisible]);
+
 
     const saveMedicineToProfile = async (newMedicine: medicine) => {
         try {
@@ -112,51 +132,50 @@ export default function PrescriptionPic() {
     }
 
     return (
-        <>
-            <View className="flex-1 bg-white">
-                <CameraView style={styles.camera} facing={'back'} ref={cameraRef} />
-                <View className="flex flex-col justify-center items-center bg-transparent h-[36%] w-[90%] ml-5">
-                    <View className="flex flex-row gap-5 border border-pink-500 rounded-3xl mb-2 px-3 py-2 min-h-32">
-                        {photos.length === 0 ? (
-                            <View className="w-full justify-self-center self-center text-center justify-center items-center">
-                                <Text className="text-pink-500 font-Milliard-Heavy text-2xl opacity-50">No photos taken yet</Text>
-                            </View>
-                        ) : (
-                            <ScrollView
-                                horizontal={true}
-                                showsHorizontalScrollIndicator={false}
-                                contentContainerStyle={{ gap: 5 }}
-                                className="rounded-xl border"
-                            >
-                                {
-                                    photos.map((photo: any, index: any) => (
-                                        <Pressable key={index} onPress={() => { setSelectedPhoto(photo.uri); setPhotoModalVisible(true) }}>
-                                            <Image source={{ uri: photo.uri }} className="w-20 h-28 rounded-lg border border-white" resizeMode="cover" />
-                                        </Pressable>
-                                    ))
-                                }
-                            </ScrollView>
-                        )}
-                    </View>
-                    <View className="flex flex-col gap-2 justify-center items-center w-full">
-                        <Button placeholder="Take Picture" onPress={() => takePicture()} width="w-full" />
-                        <Button placeholder="Upload Photos"
-                            onPress={() => {
-                                photos.length > 0 ? photos.map((photo: any) => uploadPhotos(photo)) : setWarningText("No photos taken yet"); setWarningModalVisible(true);
-                            }}
-                            width="w-full" />
-
-                    </View>
-                    <View className="flex flex-col gap-2 justify-center items-end w-full mt-2">
-                        <Button placeholder="Skip" onPress={() => router.push("/medStock")} width="w-1/2" />
-                    </View>
+        <Animated.View className="flex-1 bg-white" style={animatedStyle}>
+            <CameraView style={styles.camera} facing={'back'} ref={cameraRef} />
+            <View className="flex flex-col justify-center items-center bg-transparent h-[36%] w-[90%] ml-5">
+                <View className="flex flex-row gap-5 border border-pink-500 rounded-3xl mb-2 px-3 py-2 min-h-32">
+                    {photos.length === 0 ? (
+                        <View className="w-full justify-self-center self-center text-center justify-center items-center">
+                            <Text className="text-pink-500 font-Milliard-Heavy text-2xl opacity-50">No photos taken yet</Text>
+                        </View>
+                    ) : (
+                        <ScrollView
+                            horizontal={true}
+                            showsHorizontalScrollIndicator={false}
+                            contentContainerStyle={{ gap: 5 }}
+                            className="rounded-xl border"
+                        >
+                            {
+                                photos.map((photo: any, index: any) => (
+                                    <Pressable key={index} onPress={() => { setSelectedPhoto(photo.uri); setPhotoModalVisible(true) }}>
+                                        <Image source={{ uri: photo.uri }} className="w-20 h-28 rounded-lg border border-white" resizeMode="cover" />
+                                    </Pressable>
+                                ))
+                            }
+                        </ScrollView>
+                    )}
                 </View>
-                <WarningModal header='Tutorial' isOpen={tutorialModalVisible} onClose={() => setTutorialModalVisible(false)} text="Take a picture of your prescription to automatically add your medicine schedule" />
-                <WarningModal header={warningText} isOpen={warningModalVisible} onClose={() => setWarningModalVisible(false)} text="Please try again." />
-                <PhotoModal isOpen={photoModalVisible} onClose={() => setPhotoModalVisible(false)} photo={selectedPhoto} deletePhoto={deletePhoto} />
+                <View className="flex flex-col gap-2 justify-center items-center w-full">
+                    <Button placeholder="Take Picture" onPress={() => takePicture()} width="w-full" />
+                    <Button placeholder="Upload Photos"
+                        onPress={() => {
+                            photos.length > 0 ? photos.map((photo: any) => uploadPhotos(photo)) : setWarningText("No photos taken yet"); setWarningModalVisible(true);
+                        }}
+                        width="w-full" />
+
+                </View>
+                <View className="flex flex-col gap-2 justify-center items-end w-full mt-2">
+                    <Button placeholder="Skip" onPress={() => router.push("/medStock")} width="w-1/2" />
+                </View>
             </View>
-        </>
+            <WarningModal header='Tutorial' isOpen={tutorialModalVisible} onClose={() => setTutorialModalVisible(false)} text="Take a picture of your prescription to automatically add your medicine schedule" />
+            <WarningModal header={warningText} isOpen={warningModalVisible} onClose={() => setWarningModalVisible(false)} text="Please try again." />
+            <PhotoModal isOpen={photoModalVisible} onClose={() => setPhotoModalVisible(false)} photo={selectedPhoto} deletePhoto={deletePhoto} />
+        </Animated.View>
     );
+
 }
 
 const styles = StyleSheet.create({

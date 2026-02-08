@@ -1,7 +1,9 @@
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import TextBox from '@/components/textBox';
 import Button from '@/components/button';
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Profile, medicine, day } from 'types';
 import WarningModal from '@/components/warningModal';
@@ -23,6 +25,24 @@ export default function AddMedicine() {
     const [warningModalVisible, setWarningModalVisible] = useState(false);
     const [warningText, setWarningText] = useState("");
     const [showTimePicker, setShowTimePicker] = useState(false);
+
+    const opacity = useSharedValue(0);
+
+
+    const animatedStyle = useAnimatedStyle(() => {
+        return {
+            opacity: withTiming(opacity.value, { duration: 50 })
+        };
+    });
+
+    useEffect(() => {
+        if (warningModalVisible || showTimePicker) {
+            opacity.value = withTiming(0.25);
+        } else {
+            opacity.value = withTiming(1);
+        }
+    }, [warningModalVisible, showTimePicker]);
+
 
     const colorArray = [
         "bg-red-100",
@@ -147,7 +167,7 @@ export default function AddMedicine() {
     };
 
     return (
-        <View className="flex-1 items-center justify-center bg-white">
+        <Animated.View className="flex-1 items-center justify-center bg-white" style={animatedStyle}>
             <View className="w-5/6 items-center justify-center">
                 <Text className="text-pink-500 text-3xl font-Milliard-ExtraBold mb-5">Add Medicine</Text>
                 <View className="flex flex-col gap-3 w-full">
@@ -252,6 +272,7 @@ export default function AddMedicine() {
                     text={warningText}
                 />
             </View>
-        </View>
+        </Animated.View>
     );
+
 }

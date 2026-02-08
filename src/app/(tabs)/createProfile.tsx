@@ -1,6 +1,8 @@
 import { View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
 import TextBox from '@/components/textBox'; import Button from '@/components/button';
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Profile } from 'types';
 import WarningModal from '@/components/warningModal';
@@ -14,6 +16,24 @@ export default function CreateProfile() {
     const [age, setAge] = useState("");
     const [affliction, setAffliction] = useState("");
     const [warningModalVisible, setWarningModalVisible] = useState(false);
+
+    const opacity = useSharedValue(0);
+
+
+    const animatedStyle = useAnimatedStyle(() => {
+        return {
+            opacity: withTiming(opacity.value, { duration: 50 })
+        };
+    });
+
+    useEffect(() => {
+        if (warningModalVisible) {
+            opacity.value = withTiming(0.25);
+        } else {
+            opacity.value = withTiming(1);
+        }
+    }, [warningModalVisible]);
+
 
     const saveProfile = async () => {
         try {
@@ -48,7 +68,7 @@ export default function CreateProfile() {
     };
 
     return (
-        <View className="flex-1 items-center justify-center bg-white">
+        <Animated.View className="flex-1 items-center justify-center bg-white" style={animatedStyle}>
             <Text className="text-pink-500 text-3xl font-Milliard-ExtraBold mb-3">Create Profile</Text>
             <View className="flex flex-col w-5/6 gap-3">
                 <View className="flex flex-col">
@@ -65,6 +85,7 @@ export default function CreateProfile() {
                 </View>
             </View>
             <WarningModal header='Warning' isOpen={warningModalVisible} onClose={() => setWarningModalVisible(false)} text="Please fill in all fields" />
-        </View>
+        </Animated.View>
     );
+
 }
