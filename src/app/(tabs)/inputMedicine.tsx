@@ -2,8 +2,6 @@ import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import TextBox from '@/components/textBox';
 import Button from '@/components/button';
 import { useState, useEffect } from "react";
-import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
-
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Profile, medicine, day } from 'types';
 import WarningModal from '@/components/warningModal';
@@ -11,6 +9,7 @@ import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { useRouter } from 'expo-router';
 import * as Crypto from 'expo-crypto';
 import { format24to12 } from '@/components/functions/timeUtils';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 
 const DAYS: day[] = ["M", "T", "W", "Th", "F", "S", "Su"];
 

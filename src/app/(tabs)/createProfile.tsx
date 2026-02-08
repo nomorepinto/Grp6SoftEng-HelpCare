@@ -1,13 +1,12 @@
 import { View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
 import TextBox from '@/components/textBox'; import Button from '@/components/button';
 import { useState, useEffect } from "react";
-import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
-
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Profile } from 'types';
 import WarningModal from '@/components/warningModal';
 import { useRouter } from 'expo-router';
 import * as Crypto from 'expo-crypto';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 
 
 export default function CreateProfile() {

@@ -44,6 +44,8 @@ export default function PrescriptionPic() {
 
 
     const saveMedicineToProfile = async (newMedicine: medicine) => {
+        // ... (trimmed)
+
         try {
             const profileArray = JSON.parse(await AsyncStorage.getItem("profileArray") ?? "[]");
             if (profileArray.length > 0) {
