@@ -1,0 +1,5 @@
+medicine editing
+index progress bar
+doctor's appointment calendar color matching/customization
+doctor type implementation
+notification/ text message implementation
