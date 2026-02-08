@@ -11,6 +11,12 @@ import LightButton from '@/components/lightButton';
 import WeekScheduleBullet from '@/components/weekScheduleBullet';
 import PagerView from 'react-native-pager-view';
 import MedInfoModal from '@/components/medInfoModal';
+import Animated, {
+  useSharedValue, useAnimatedStyle,
+  interpolateColor,
+  withTiming
+} from 'react-native-reanimated';
+
 
 export default function Home() {
 
@@ -20,6 +26,24 @@ export default function Home() {
   const [currentDate, setCurrentDate] = useState(Date.now());
   const [isMedInfoModalOpen, setIsMedInfoModalOpen] = useState(false);
   const [selectedMed, setSelectedMed] = useState<medicine | null>(null);
+
+  const opacity = useSharedValue(0);
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      opacity: withTiming(opacity.value, { duration: 50 })
+    };
+  });
+
+  useEffect(() => {
+    if (isMedInfoModalOpen) {
+      opacity.value = withTiming(0.25);
+    } else {
+      opacity.value = withTiming(1);
+    }
+  }, [isMedInfoModalOpen]);
+
+
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -153,7 +177,7 @@ export default function Home() {
   }
 
   return (
-    <>
+    <Animated.View className="flex-1" style={animatedStyle}>
       <NavBar profileArray={profileArray} selectProfile={selectProfile} />
       <View className="flex-1 justify-start pt-5 bg-gray-150">
         {selectedProfile?.medicineSchedule.length === 0 ?
@@ -200,6 +224,6 @@ export default function Home() {
       <View className="flex flex-col items-center pt-5 pb-8 bg-white">
         <Button placeholder="Med Stock" onPress={() => router.push('/medStock')} width='w-3/4' />
       </View>
-    </>
+    </Animated.View>
   );
 }
