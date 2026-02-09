@@ -204,6 +204,8 @@ export default function Home() {
     );
   }
 
+  const colors = require("tailwindcss/colors");
+
   return (
     <Animated.View className="flex-1" style={animatedStyle}>
       <NavBar profileArray={profileArray} selectProfile={selectProfile} />
@@ -215,65 +217,88 @@ export default function Home() {
             </View>
           ) :
           (
-            <PagerView
-              style={{ flex: 1 }}
-              initialPage={0}
-              onPageSelected={(e) => setCurrentPage(e.nativeEvent.position)}
-            >
-              <View key="1" className="flex flex-col gap-2 w-full h-full ml-5">
-                <Text className="text-gray-700 font-Milliard-ExtraBold text-3xl rounded-full bg-white px-5 py-2 w-[90%]">{dayMap[new Date(currentDate).getDay()]}</Text>
-                <ScrollView className="flex-1">
-                  {hours.map((hour: groupedMedsByHours, index: number) => (
-                    <DayScheduleBullet key={index} hour={hour} selectMedicine={(medicine: medicine) => {
-                      setSelectedMed(medicine);
-                      setIsMedInfoModalOpen(true);
-                    }} />
-                  ))}
-                </ScrollView>
+            <>
+              <View className="flex flex-row w-[90%] justify-between mb-4 self-center">
+                <Animated.View className={`w-[32%] h-2 rounded-full bg-pink-500`}
+                  style={{
+                    backgroundColor: currentPage === 0 ? colors.pink[500] : colors.gray[300],
+                    transitionProperty: 'backgroundColor',
+                    transitionDuration: 100,
+                  }}>
+                </Animated.View>
+                <Animated.View className={`w-[32%] h-2 rounded-full bg-pink-500`} style={{
+                  backgroundColor: currentPage === 1 ? colors.pink[500] : colors.gray[300],
+                  transitionProperty: 'backgroundColor',
+                  transitionDuration: 100,
+                }}>
+                </Animated.View>
+                <Animated.View className={`w-[32%] h-2 rounded-full bg-pink-500`} style={{
+                  backgroundColor: currentPage === 2 ? colors.pink[500] : colors.gray[300],
+                  transitionProperty: 'backgroundColor',
+                  transitionDuration: 100,
+                }}>
+                </Animated.View>
               </View>
-
-              <View key="2" className="flex flex-col gap-2 w-full h-full ml-5">
-                <ScrollView className="flex-1">
-                  {days.map((dayGroup: groupedMedsByDays, index: number) => (
-                    <WeekScheduleBullet key={index} day={dayGroup} selectMedicine={(medicine: medicine) => {
-                      setSelectedMed(medicine);
-                      setIsMedInfoModalOpen(true);
-                    }} />
-                  ))}
-                </ScrollView>
-              </View>
-
-              <View key="3" className="flex flex-col gap-2 w-full h-full ml-5">
-                <Text className="text-gray-700 font-Milliard-ExtraBold text-3xl rounded-full bg-white px-5 py-2 w-[90%]">Doctor's Appointments</Text>
-                <View className="rounded-3xl bg-white px-5 py-8 w-[90%]">
-                  <Calendar
-                    calendarMonthId={new Date(currentDate).toISOString().split('T')[0].substring(0, 7) + '-01'}
-                    onCalendarDayPress={dateId => {
-                      console.log('selected day', dateId);
-                    }}
-                    calendarActiveDateRanges={selectedProfile?.appointments.map((appointment: appointment) => ({
-                      startId: new Date(appointment.date).toISOString().split('T')[0],
-                      endId: new Date(appointment.date).toISOString().split('T')[0]
-                    }))}
-                  />
-                </View>
-                <View className="max-h-[40%]">
-                  <ScrollView className="flex-grow-0">
-                    {groupedAppointments.map((group, index) => (
-                      <AppointmentBullet
-                        key={index}
-                        dayAppointments={group}
-                        onPress={(app) => {
-                          console.log("Appointment pressed", app);
-                        }}
-                      />
+              <PagerView
+                style={{ flex: 1 }}
+                initialPage={0}
+                onPageSelected={(e) => setCurrentPage(e.nativeEvent.position)}
+              >
+                <View key="1" className="flex flex-col gap-2 w-full h-full ml-5">
+                  <Text className="text-gray-700 font-Milliard-ExtraBold text-3xl rounded-full bg-white px-5 py-2 w-[90%]">{dayMap[new Date(currentDate).getDay()]}</Text>
+                  <ScrollView className="flex-1">
+                    {hours.map((hour: groupedMedsByHours, index: number) => (
+                      <DayScheduleBullet key={index} hour={hour} selectMedicine={(medicine: medicine) => {
+                        setSelectedMed(medicine);
+                        setIsMedInfoModalOpen(true);
+                      }} />
                     ))}
                   </ScrollView>
                 </View>
-                <Button placeholder="Add Appointment" onPress={() => router.push('/addAppointment')} width='w-[90%]' />
-              </View>
 
-            </PagerView>
+                <View key="2" className="flex flex-col gap-2 w-full h-full ml-5">
+                  <ScrollView className="flex-1">
+                    {days.map((dayGroup: groupedMedsByDays, index: number) => (
+                      <WeekScheduleBullet key={index} day={dayGroup} selectMedicine={(medicine: medicine) => {
+                        setSelectedMed(medicine);
+                        setIsMedInfoModalOpen(true);
+                      }} />
+                    ))}
+                  </ScrollView>
+                </View>
+
+                <View key="3" className="flex flex-col gap-2 w-full h-full ml-5">
+                  <Text className="text-gray-700 font-Milliard-ExtraBold text-3xl rounded-full bg-white px-5 py-2 w-[90%]">Doctor's Appointments</Text>
+                  <View className="rounded-3xl bg-white px-5 py-8 w-[90%]">
+                    <Calendar
+                      calendarMonthId={new Date(currentDate).toISOString().split('T')[0].substring(0, 7) + '-01'}
+                      onCalendarDayPress={dateId => {
+                        console.log('selected day', dateId);
+                      }}
+                      calendarActiveDateRanges={selectedProfile?.appointments.map((appointment: appointment) => ({
+                        startId: new Date(appointment.date).toISOString().split('T')[0],
+                        endId: new Date(appointment.date).toISOString().split('T')[0]
+                      }))}
+                    />
+                  </View>
+                  <View className="max-h-[40%]">
+                    <ScrollView className="flex-grow-0">
+                      {groupedAppointments.map((group, index) => (
+                        <AppointmentBullet
+                          key={index}
+                          dayAppointments={group}
+                          onPress={(app) => {
+                            console.log("Appointment pressed", app);
+                          }}
+                        />
+                      ))}
+                    </ScrollView>
+                  </View>
+                  <LightButton placeholder="Add Appointment" onPress={() => router.push('/addAppointment')} width='w-[90%]' />
+                </View>
+
+              </PagerView>
+            </>
           )
 
         }
