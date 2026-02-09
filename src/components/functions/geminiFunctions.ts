@@ -28,7 +28,23 @@ export const testGemini = async () => {
 
 export const askGemini = async (dataBase64: string) => {
     try {
-        const prompt = "Analyze the image. Return a JSON that will satisfy the following type: \n\n\ntype Medicine = {\n    name: string;\n    dose: string;\n    frequency: string;\n    duration: string;\n}; if the identified image is not a prescription, set the name to 'not a prescription' and all other values blank";
+        const prompt = `Analyze the image. Identify all medicines and their schedules. 
+        Return ONLY a JSON array of objects satisfying this type:
+        type Day = "M" | "T" | "W" | "Th" | "F" | "S" | "Su";
+        type MedicineTime = { time: string; isTaken: boolean; };
+        type Medicine = {
+            id: string; // generate a random id
+            name: string;
+            quantity: number;
+            times: MedicineTime[];
+            days: Day[];
+            amountBought: number;
+            amountRemaining: number;
+            color: string; // suggest a tailwind bg color like 'bg-blue-200'
+        };
+        If the image is not a prescription, return: [{"name": "not a prescription"}]
+        For the 'time' field, use "HH:mm" 24-hour format. Set 'isTaken' to false.`;
+
         const requestBody = {
             contents: [{
                 role: "user",
@@ -36,21 +52,24 @@ export const askGemini = async (dataBase64: string) => {
                     { text: prompt },
                     {
                         inlineData: {
-                            data: dataBase64, // Ensure this is just the base64 string, no "data:image/jpeg;base64," prefix
+                            data: dataBase64,
                             mimeType: "image/jpeg"
                         }
                     }
                 ]
-            }]
+            }],
+            generationConfig: {
+                responseMimeType: "application/json",
+            }
         };
 
         const response = await axios.post(url, requestBody);
-
-        console.log(response.data.candidates[0].content.parts[0].text);
+        const result = response.data.candidates[0].content.parts[0].text;
+        return JSON.parse(result);
 
     } catch (error: any) {
-        // Axios catches 4xx and 5xx errors automatically
         console.error("Status:", error.response?.status);
         console.error("Message:", error.response?.data);
+        return null;
     }
 };

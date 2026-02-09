@@ -3,11 +3,12 @@ export type day = "M" | "T" | "W" | "Th" | "F" | "S" | "Su";
 export const sampleMedicine: medicine = {
     id: "1",
     name: "Amoxicillin",
-    quantity: 1,
-    times: ["08:00", "20:00"],
+    totalQuantity: 1,
+    times: [{ time: "08:00", isTaken: false },
+    { time: "20:00", isTaken: false }],
     days: ["M", "W", "F"],
-    amountBought: 1,
     amountRemaining: 1,
+    amountTaken: 0,
     color: "bg-blue-500",
 
 };
@@ -38,14 +39,19 @@ export type appointment = {
     time: string;
 }
 
+export type medicineTime = {
+    time: string;
+    isTaken: boolean;
+}
+
 export type medicine = {
     id: string;
     name: string;
-    quantity: number;
-    times: string[];
+    totalQuantity: number;
+    times: medicineTime[];
     days: day[];
-    amountBought: number;
     amountRemaining: number;
+    amountTaken: number;
     color: string;
 
 };

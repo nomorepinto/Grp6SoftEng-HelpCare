@@ -46,11 +46,11 @@ export default function MedInfoModal({
             {/* Quantity */}
             <View className="mb-4">
               <Text className="text-slate-700 text-lg font-Milliard-Bold mb-2">
-                Quantity
+                Total Quantity
               </Text>
               <View className="border border-slate-300 rounded-xl px-4 py-3 bg-slate-50">
                 <Text className="text-slate-600 text-base font-Milliard-Medium">
-                  {medData?.quantity || 'N/A'}
+                  {medData?.totalQuantity || 'N/A'}
                 </Text>
               </View>
             </View>
@@ -62,7 +62,7 @@ export default function MedInfoModal({
               </Text>
               <View className="border border-slate-300 rounded-xl px-4 py-3 bg-slate-50">
                 <Text className="text-slate-600 text-base font-Milliard-Medium">
-                  {medData?.times?.map(format24to12).join(', ') || 'N/A'}
+                  {medData?.times?.map(t => format24to12(t.time)).join(', ') || 'N/A'}
                 </Text>
               </View>
             </View>

@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useRouter, useFocusEffect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NavBar from '@/components/navBar';
-import { Profile, medicine, groupedMedsByHours, groupedMedsByDays, day, sampleMedicine, appointment, groupedAppointmentsByDate } from 'types';
+import { Profile, medicine, groupedMedsByHours, groupedMedsByDays, day, sampleMedicine, appointment, groupedAppointmentsByDate, medicineTime } from 'types';
 import DayScheduleBullet from '@/components/dayScheduleBullet';
 import Button from '@/components/button';
 import LightButton from '@/components/lightButton';
@@ -18,7 +18,7 @@ import Animated, {
   withTiming
 } from 'react-native-reanimated';
 import { Calendar } from '@marceloterreiro/flash-calendar';
-
+import WarningModal from '@/components/warningModal';
 
 
 export default function Home() {
@@ -29,6 +29,7 @@ export default function Home() {
   const [currentDate, setCurrentDate] = useState(Date.now());
   const [isMedInfoModalOpen, setIsMedInfoModalOpen] = useState(false);
   const [selectedMed, setSelectedMed] = useState<medicine | null>(null);
+  const [isWarningModalOpen, setIsWarningModalOpen] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -77,6 +78,7 @@ export default function Home() {
       const newDate = Date.now();
       if (newDate !== currentDate) {
         setCurrentDate(newDate);
+        setTakeMedicineFalseAfterDayChange();
       }
     }, 60000); // Check every minute
 
@@ -106,6 +108,61 @@ export default function Home() {
     }
   }
 
+  const deleteProfile = async (profile: Profile) => {
+    try {
+      if (profileArray.length === 1) {
+        setIsWarningModalOpen(true);
+        return;
+      }
+      if (profile.isSelected) {
+        setIsWarningModalOpen(true);
+        return;
+      }
+      const updatedProfileArray = profileArray.filter((p: Profile) => profile.id !== p.id);
+      setProfileArray(updatedProfileArray);
+      await saveProfileArray(updatedProfileArray);
+    } catch (e) {
+      console.error("Failed to delete profile [index.tsx]", e);
+    }
+  }
+
+  const takeMedicine = async (medicine: medicine, timeStr: string) => {
+    if (!selectedProfile) return;
+
+    const updatedMeds = selectedProfile.medicineSchedule.map((med) => {
+      if (med.id === medicine.id) {
+        const timeToUpdate = med.times.find(t => t.time === timeStr);
+        if (timeToUpdate) {
+          med.amountRemaining = timeToUpdate.isTaken ? med.amountRemaining : med.amountRemaining - 1;
+          timeToUpdate.isTaken = true;
+        }
+      }
+      return med;
+    });
+
+    const updatedProfileArray = profileArray.map((p: Profile) =>
+      p.id === selectedProfile.id ? { ...p, medicineSchedule: updatedMeds } : p
+    );
+
+    setProfileArray(updatedProfileArray);
+    await saveProfileArray(updatedProfileArray);
+  };
+
+  const setTakeMedicineFalseAfterDayChange = async () => {
+    if (!selectedProfile) return;
+
+    const updatedMeds = selectedProfile.medicineSchedule.map((med) => {
+      med.times.forEach((t) => (t.isTaken = false));
+      return med;
+    });
+
+    const updatedProfileArray = profileArray.map((p: Profile) =>
+      p.id === selectedProfile.id ? { ...p, medicineSchedule: updatedMeds } : p
+    );
+
+    setProfileArray(updatedProfileArray);
+    await saveProfileArray(updatedProfileArray);
+  };
 
 
   const hours: groupedMedsByHours[] = useMemo(() => {
@@ -118,12 +175,13 @@ export default function Home() {
     );
 
     // Get all unique hours from today's medicines
-    const hoursArray = todaysMedicines.flatMap((medicine: medicine) => medicine.times);
-    const uniqueHours = [...new Set(hoursArray)];
+    const allTimes = todaysMedicines.flatMap((medicine: medicine) => medicine.times);
+
+    // Deduplicate by time string
+    const uniqueTimeStrings = [...new Set(allTimes.map(t => t.time))];
 
     // Sort unique hours chronologically
-    const sortedHours = uniqueHours.sort((a, b) => {
-      // Convert "HH:MM" to minutes for comparison
+    const sortedTimeStrings = uniqueTimeStrings.sort((a, b) => {
       const [hoursA, minutesA] = a.split(':').map(Number);
       const [hoursB, minutesB] = b.split(':').map(Number);
 
@@ -133,12 +191,12 @@ export default function Home() {
       return totalMinutesA - totalMinutesB;
     });
 
-    // Group medicines by hour
-    const groupedHours = sortedHours.map((hour: string) => {
+    // Group medicines by hour string
+    const groupedHours = sortedTimeStrings.map((timeStr: string) => {
       return {
-        hour: hour,
+        hour: timeStr,
         medicines: todaysMedicines.filter((medicine: medicine) =>
-          medicine.times.includes(hour)
+          medicine.times.some(t => t.time === timeStr)
         )
       };
     });
@@ -208,7 +266,7 @@ export default function Home() {
 
   return (
     <Animated.View className="flex-1" style={animatedStyle}>
-      <NavBar profileArray={profileArray} selectProfile={selectProfile} />
+      <NavBar profileArray={profileArray} selectProfile={selectProfile} deleteProfile={deleteProfile} />
       <View className="flex-1 justify-start pt-5 bg-gray-150">
         {selectedProfile?.medicineSchedule.length === 0 ?
           (
@@ -248,10 +306,15 @@ export default function Home() {
                   <Text className="text-gray-700 font-Milliard-ExtraBold text-3xl rounded-full bg-white px-5 py-2 w-[90%]">{dayMap[new Date(currentDate).getDay()]}</Text>
                   <ScrollView className="flex-1">
                     {hours.map((hour: groupedMedsByHours, index: number) => (
-                      <DayScheduleBullet key={index} hour={hour} selectMedicine={(medicine: medicine) => {
-                        setSelectedMed(medicine);
-                        setIsMedInfoModalOpen(true);
-                      }} />
+                      <DayScheduleBullet
+                        key={index}
+                        hour={hour}
+                        selectMedicine={(medicine: medicine) => {
+                          setSelectedMed(medicine);
+                          setIsMedInfoModalOpen(true);
+                        }}
+                        onCheck={takeMedicine}
+                      />
                     ))}
                   </ScrollView>
                 </View>
@@ -302,6 +365,7 @@ export default function Home() {
           )
 
         }
+        <WarningModal isOpen={isWarningModalOpen} onClose={() => setIsWarningModalOpen(false)} header="Warning" text="Cannot Deleted Current Profile, Please Select Another Profile Before Deleting." />
         <MedInfoModal isOpen={isMedInfoModalOpen} onClose={() => setIsMedInfoModalOpen(false)} medicine={selectedMed ?? sampleMedicine} />
       </View>
       <View className="flex flex-col items-center pt-5 pb-8 bg-white">

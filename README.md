@@ -5,7 +5,7 @@
 | Requirement | Status | Details |
 | :--- | :--- | :--- |
 | **1. Allow creating one account for each patient.** | **FULFILLED** | Implemented in `createProfile.tsx`. Profiles are stored in `AsyncStorage` and can be switched via the `NavBar`. |
-| **2. Allow removing a patient account.** | **PARTIALLY FULFILLED** | The `NavBar` component has a "Clear All" function which removes all profiles. However, there is no UI for deleting a single specific patient account. |
+| **2. Allow removing a patient account.** | **FULFILLED** | The `NavBar` component has a delete function which removes profiles. |
 | **3. Receive prescription data (AI OCR or manual).** | **FULFILLED** | AI OCR is implemented in `prescriptionPic.tsx` using Google Gemini. Manual input is implemented in `inputMedicine.tsx`. |
 | **4. Create a schedule table (time and day).** | **FULFILLED** | The main dashboard (`index.tsx`) displays both a "Today" schedule (grouped by hour) and a weekly overview. |
 | **5. Send reminder notification when medicine is due.** | **NOT FULFILLED** | The system currently lack notification logic and the `expo-notifications` dependency. |

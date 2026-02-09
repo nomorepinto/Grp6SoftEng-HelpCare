@@ -1,7 +1,7 @@
 import { View, Text } from "react-native";
 import type { medicine, groupedMedsByDays, day } from "types";
 
-import MedicineBullet from "./medicineBullet";
+import { MedicineBulletWeek } from "./medicineBullet";
 
 interface WeekScheduleBulletProps {
     day: groupedMedsByDays;
@@ -24,7 +24,7 @@ export default function WeekScheduleBullet({ day, selectMedicine }: WeekSchedule
             <Text className="text-gray-700 font-Milliard-ExtraBold text-3xl ml-2">{fullDayNames[day.day]}</Text>
             <View className="flex flex-col w-full gap-2">
                 {day.medicines.map((medicine, index) => (
-                    <MedicineBullet key={index} medicine={medicine} color={medicine.color} onPress={() => selectMedicine(medicine)} />
+                    <MedicineBulletWeek key={index} medicine={medicine} color={medicine.color} onPress={() => selectMedicine(medicine)} />
                 ))}
             </View>
         </View>

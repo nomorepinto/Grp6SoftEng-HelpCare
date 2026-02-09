@@ -4,9 +4,10 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useState } from "react";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import Animated, { FadeIn, FadeOut, SlideInDown, SlideOutDown, SlideInUp, SlideOutUp } from "react-native-reanimated";
 
 
-export default function NavBar({ profileArray, selectProfile }: { profileArray: Profile[], selectProfile: any }) {
+export default function NavBar({ profileArray, selectProfile, deleteProfile }: { profileArray: Profile[], selectProfile: any, deleteProfile: any }) {
     const [profileDropdown, setProfileDropdown] = useState(false);
     const router = useRouter();
 
@@ -32,44 +33,55 @@ export default function NavBar({ profileArray, selectProfile }: { profileArray: 
 
             {
                 profileDropdown && (
-                    <View className="absolute top-[6.5rem] right-5 w-[40%] bg-white rounded-xl border border-pink-500 z-50">
-                        {profileArray.map((profile: Profile, index: number) => (
+                    <>
+                        <Animated.View className="absolute top-[6.5rem] right-[45%] w-[40%] bg-white rounded-xl z-50"
+                            entering={FadeIn.duration(200)}
+                            exiting={FadeOut.duration(200)}>
+                            {profileArray.map((profile: Profile, index: number) => (
+                                <Pressable
+                                    key={index}
+                                    onPress={async () => {
+                                        await deleteProfile(profile);
+                                        setProfileDropdown(false);
+                                    }}
+                                    className="px-5 py-2 border-b bg-red-500 active:bg-red-700 rounded-xl"
+                                >
+                                    <Text className="text-white text-lg font-Milliard-Heavy">
+                                        Delete
+                                    </Text>
+                                </Pressable>
+                            ))}
+                        </Animated.View>
+                        <Animated.View className="absolute top-[6.5rem] right-5 w-[40%] bg-white rounded-xl border border-pink-500 z-50"
+                            entering={FadeIn.duration(200)}
+                            exiting={FadeOut.duration(200)}>
+                            {profileArray.map((profile: Profile, index: number) => (
+                                <Pressable
+                                    key={index}
+                                    onPress={async () => {
+                                        await selectProfile(profile);
+                                        setProfileDropdown(false);
+                                    }}
+                                    className="px-5 py-2 border-b border-pink-100 active:bg-pink-50"
+                                >
+                                    <Text className="text-pink-500 text-lg font-Milliard-Heavy">
+                                        {profile.name}
+                                    </Text>
+                                </Pressable>
+                            ))}
                             <Pressable
-                                key={index}
-                                onPress={async () => {
-                                    await selectProfile(profile);
+                                onPress={() => {
                                     setProfileDropdown(false);
+                                    router.replace("/createProfile");
                                 }}
                                 className="px-5 py-2 border-b border-pink-100 active:bg-pink-50"
                             >
                                 <Text className="text-pink-500 text-lg font-Milliard-Heavy">
-                                    {profile.name}
+                                    Create New
                                 </Text>
                             </Pressable>
-                        ))}
-                        <Pressable
-                            onPress={() => {
-                                setProfileDropdown(false);
-                                router.replace("/createProfile");
-                            }}
-                            className="px-5 py-2 border-b border-pink-100 active:bg-pink-50"
-                        >
-                            <Text className="text-pink-500 text-lg font-Milliard-Heavy">
-                                Create New
-                            </Text>
-                        </Pressable>
-                        <Pressable
-                            onPress={() => {
-                                clearProfile();
-                                setProfileDropdown(false);
-                            }}
-                            className="px-5 py-2 border-b border-pink-100 active:bg-pink-50"
-                        >
-                            <Text className="text-pink-500 text-lg font-Milliard-Heavy">
-                                Clear All
-                            </Text>
-                        </Pressable>
-                    </View>
+                        </Animated.View>
+                    </>
                 )
             }
         </View>

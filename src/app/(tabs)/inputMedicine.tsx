@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Profile, medicine, day } from 'types';
+import { Profile, medicine, day, medicineTime } from 'types';
 import WarningModal from '@/components/warningModal';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { useRouter } from 'expo-router';
@@ -133,15 +133,17 @@ export default function AddMedicine() {
             return;
         }
 
+        const medicineTimes: medicineTime[] = times.map((time) => ({ time: time, isTaken: false }));
+
         const newMedicine: medicine = {
             id: Crypto.randomUUID(),
             name: medicineName,
-            quantity: parsedQuantity,
-            times: times,
+            totalQuantity: parsedQuantity,
+            times: medicineTimes,
             days: selectedDays,
-            amountBought: parsedAmountBought,
             amountRemaining: parsedAmountBought,
-            color: colorArray[await getColorIndex()]
+            color: colorArray[await getColorIndex()],
+            amountTaken: 0
         };
 
         // Add medicine to the current profile's schedule
