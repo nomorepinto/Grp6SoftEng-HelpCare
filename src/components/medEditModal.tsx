@@ -78,6 +78,9 @@ export default function MedEditModal({
             <Text className="text-pink-500 text-3xl font-Milliard-ExtraBold mb-4 text-center">
               Edit Medicine
             </Text>
+            <Text className="text-gray-700 text-xl font-Milliard-Medium mb-4 text-center px-6">
+              Editing Medicine will cause taken status to reset to false
+            </Text>
 
             {/* Medicine Name */}
             <Text className="text-gray-700 font-semibold mb-1">Name</Text>

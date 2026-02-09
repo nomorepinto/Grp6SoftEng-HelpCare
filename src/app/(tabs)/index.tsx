@@ -1,10 +1,9 @@
-import { View, Text, ScrollView, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
-import TextBox from '@/components/textBox';
+import { View, Text, ScrollView, ActivityIndicator, Platform } from 'react-native';
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useRouter, useFocusEffect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NavBar from '@/components/navBar';
-import { Profile, medicine, groupedMedsByHours, groupedMedsByDays, day, sampleMedicine, appointment, groupedAppointmentsByDate, medicineTime } from 'types';
+import { Profile, medicine, groupedMedsByHours, groupedMedsByDays, day, sampleMedicine, appointment, groupedAppointmentsByDate } from 'types';
 import DayScheduleBullet from '@/components/dayScheduleBullet';
 import Button from '@/components/button';
 import LightButton from '@/components/lightButton';
@@ -19,6 +18,9 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Calendar } from '@marceloterreiro/flash-calendar';
 import WarningModal from '@/components/warningModal';
+import * as Device from 'expo-device';
+import * as Notifications from 'expo-notifications';
+import Constants from 'expo-constants'
 
 
 export default function Home() {
@@ -75,9 +77,16 @@ export default function Home() {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      const newDate = Date.now();
-      if (newDate !== currentDate) {
-        setCurrentDate(newDate);
+      const now = new Date();
+      const current = new Date(currentDate);
+
+      // Compare only the date parts (year, month, day)
+      if (
+        now.getDate() !== current.getDate() ||
+        now.getMonth() !== current.getMonth() ||
+        now.getFullYear() !== current.getFullYear()
+      ) {
+        setCurrentDate(Date.now());
         setTakeMedicineFalseAfterDayChange();
       }
     }, 60000); // Check every minute
@@ -133,8 +142,9 @@ export default function Home() {
       if (med.id === medicine.id) {
         const timeToUpdate = med.times.find(t => t.time === timeStr);
         if (timeToUpdate) {
-          med.amountRemaining = timeToUpdate.isTaken ? med.amountRemaining : med.amountRemaining - 1;
+          med.amountRemaining = timeToUpdate.isTaken ? med.amountRemaining : (med.amountRemaining > 0 ? med.amountRemaining - 1 : 0);
           timeToUpdate.isTaken = true;
+          med.amountTaken = timeToUpdate.isTaken ? med.amountTaken + 1 : med.amountTaken;
         }
       }
       return med;

@@ -1,6 +1,6 @@
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
-
+import { ProgressBar } from '@/components/progressBar';
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'expo-router';
 import Button from '@/components/button';
@@ -11,7 +11,7 @@ import clsx from 'clsx';
 import { format24to12 } from '@/components/functions/timeUtils';
 import MedEditModal from "@/components/medEditModal";
 
-const MedicineItem = ({
+function MedicineItem({
     med,
     onDelete,
     days,
@@ -21,67 +21,85 @@ const MedicineItem = ({
     onDelete: () => void;
     days: day[];
     onEdit: () => void;
-}) => (
-    <View className={`border border-gray-200 rounded-2xl p-4 ${med.color}`}>
-        <Text className="text-2xl font-Milliard-Heavy text-gray-700">
-            {med.name}
-        </Text>
-        <View className="flex flex-row w-full gap-2 mb-2 items-center">
-            <Text className="text-xl font-Milliard-Medium text-gray-700">
-                Quantity:
+}) {
+    const [totalQuantity, setTotalQuantity] = useState(med.totalQuantity);
+    const [amountTaken, setAmountTaken] = useState(med.amountTaken);
+
+    useFocusEffect(
+        useCallback(() => {
+            setTotalQuantity(med.totalQuantity);
+            setAmountTaken(med.amountTaken);
+        }, [med])
+    );
+
+    return (
+        <View className={`border border-gray-200 rounded-2xl p-4 ${med.color}`}>
+            <Text className="text-2xl font-Milliard-Heavy text-gray-700">
+                {med.name}
             </Text>
-            <View className="rounded-full bg-gray-100 border border-gray-300 px-3 py-1 ">
-                <Text className="text-sm text-gray-700 font-Milliard-Heavy">
-                    {med.amountRemaining} / {med.totalQuantity}
+            <View className="flex flex-row w-full gap-2 mb-2 items-center">
+                <Text className="text-xl font-Milliard-Medium text-gray-700">
+                    Quantity:
                 </Text>
+                <View className="rounded-full bg-gray-100 border border-gray-300 px-3 py-1 ">
+                    <Text className="text-sm text-gray-700 font-Milliard-Heavy">
+                        {med.amountRemaining} / {med.totalQuantity}
+                    </Text>
+                </View>
             </View>
-        </View>
-        <View className="flex flex-row gap-2 mb-2 items-center">
-            <Text className="text-xl font-Milliard-Medium text-gray-700">
-                Times:
-            </Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-1">
-                <View className="flex flex-row gap-2">
-                    {med.times.map((medTime, index) => (
-                        <View key={index} className="rounded-full bg-gray-100 border border-gray-300 px-3 py-1">
-                            <Text className="text-gray-700 text-sm font-Milliard-Heavy">{format24to12(medTime.time)}</Text>
+            <View className="flex flex-row gap-2 mb-2 items-center">
+                <Text className="text-xl font-Milliard-Medium text-gray-700">
+                    Times:
+                </Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-1">
+                    <View className="flex flex-row gap-2">
+                        {med.times.map((medTime, index) => (
+                            <View key={index} className="rounded-full bg-gray-100 border border-gray-300 px-3 py-1">
+                                <Text className="text-gray-700 text-sm font-Milliard-Heavy">{format24to12(medTime.time)}</Text>
+                            </View>
+                        ))}
+                    </View>
+                </ScrollView>
+            </View>
+            <View className="mb-2 flex flex-row gap-3">
+                <Text className="text-xl font-Milliard-Medium text-gray-700">
+                    Days:
+                </Text>
+                <View className="flex flex-row gap-1">
+                    {days.map((day, index) => (
+                        <View key={index} className="justify-center items-center bg-gray-100 border border-gray-300 rounded-full px-3 py-1">
+                            <Text className="text-gray-700 text-sm font-Milliard-ExtraBold">{day}</Text>
                         </View>
                     ))}
                 </View>
-            </ScrollView>
-        </View>
-        <View className="mb-4 flex flex-row gap-3">
-            <Text className="text-xl font-Milliard-Medium text-gray-700">
-                Days:
-            </Text>
-            <View className="flex flex-row gap-1">
-                {days.map((day, index) => (
-                    <View key={index} className="justify-center items-center bg-gray-100 border border-gray-300 rounded-full px-3 py-1">
-                        <Text className="text-gray-700 text-sm font-Milliard-ExtraBold">{day}</Text>
-                    </View>
-                ))}
+            </View>
+            <View className="mb-4 flex flex-row gap-3 items-center">
+                <Text className="text-xl font-Milliard-Medium text-gray-700">
+                    Amount Taken:
+                </Text>
+                <ProgressBar current={amountTaken} total={totalQuantity} />
+            </View>
+            <View className="flex flex-row justify-between">
+                <Pressable
+                    onPress={onDelete}
+                    className="rounded-full py-2 px-4 w-[48%] active:bg-slate-300 bg-red-400"
+                >
+                    <Text className="font-Milliard-Medium text-center text-white">
+                        Delete
+                    </Text>
+                </Pressable>
+                <Pressable
+                    onPress={onEdit}
+                    className="rounded-full py-2 px-4 w-[48%] active:bg-slate-300 bg-gray-400"
+                >
+                    <Text className="font-Milliard-Medium text-center text-white">
+                        Edit
+                    </Text>
+                </Pressable>
             </View>
         </View>
-        <View className="flex flex-row justify-between">
-            <Pressable
-                onPress={onDelete}
-                className="rounded-full py-2 px-4 w-[48%] active:bg-slate-300 bg-red-400"
-            >
-                <Text className="font-Milliard-Medium text-center text-white">
-                    Delete
-                </Text>
-            </Pressable>
-            <Pressable
-                onPress={onEdit}
-                className="rounded-full py-2 px-4 w-[48%] active:bg-slate-300 bg-gray-400"
-            >
-                <Text className="font-Milliard-Medium text-center text-white">
-                    Edit
-                </Text>
-            </Pressable>
-        </View>
-    </View>
-);
+    );
+}
 
 export default function MedStock() {
     const router = useRouter();

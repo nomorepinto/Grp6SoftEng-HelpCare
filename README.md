@@ -9,8 +9,8 @@
 | **3. Receive prescription data (AI OCR or manual).** | **FULFILLED** | AI OCR is implemented in `prescriptionPic.tsx` using Google Gemini. Manual input is implemented in `inputMedicine.tsx`. |
 | **4. Create a schedule table (time and day).** | **FULFILLED** | The main dashboard (`index.tsx`) displays both a "Today" schedule (grouped by hour) and a weekly overview. |
 | **5. Send reminder notification when medicine is due.** | **NOT FULFILLED** | The system currently lack notification logic and the `expo-notifications` dependency. |
-| **6. Track whether the user has logged a dose.** | **NOT FULFILLED** | There is no "Log Dose" or "Take Medicine" button in the UI. The state does not track consumption history. |
-| **7. Track remaining quantity of medicine.** | **PARTIALLY FULFILLED** | The `medicine` type Includes `amountRemaining`. It is displayed in `medStock.tsx` and `medicineBullet.tsx`. However, it does not update automatically as no logging system exists. |
+| **6. Track whether the user has logged a dose.** | **FULFILLED** | The `medicineBullet.tsx` component has a "Log Dose" button which updates the `isTaken` status of a specific dose. |
+| **7. Track remaining quantity of medicine.** | **FULFILLED** | The `medicine` type Includes `amountRemaining`. It is displayed in `medStock.tsx` and `medicineBullet.tsx`. It updates automatically when a dose is logged. |
 | **8. Remove a specific medicine prescription.** | **FULFILLED** | Implemented in `medStock.tsx` via the `deleteMedicine` function. |
 | **9. Send reminder notification for low medicine quantity.** | **NOT FULFILLED** | No notification system exists. |
 | **10. Send reminder notification for follow-up checkup.** | **NOT FULFILLED** | While doctor appointments can be created via `addAppointment.tsx`, there is no notification logic to remind the user. |

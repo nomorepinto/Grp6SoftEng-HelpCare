@@ -1,13 +1,13 @@
 import { View, Text, Pressable } from "react-native";
 import type { medicine } from "types";
 import Entypo from '@expo/vector-icons/Entypo';
+import { useState, useCallback } from "react";
+import { useFocusEffect } from "expo-router";
 
 interface MedicineBulletProps {
     medicine: medicine;
     color: string;
     onPress: () => void;
-    time?: string;
-    onCheck?: () => void;
 }
 
 export function MedicineBulletWeek({ medicine, color, onPress }: MedicineBulletProps) {
@@ -25,7 +25,15 @@ export function MedicineBulletWeek({ medicine, color, onPress }: MedicineBulletP
     );
 }
 
-export function MedicineBulletDay({ medicine, color, onPress, time, onCheck }: MedicineBulletProps) {
+interface MedicineBulletDayProps {
+    medicine: medicine;
+    color: string;
+    onPress: () => void;
+    time: string;
+    onCheck: () => void;
+}
+
+export function MedicineBulletDay({ medicine, color, onPress, time, onCheck }: MedicineBulletDayProps) {
     const isTaken = time ? medicine.times.find(t => t.time === time)?.isTaken : false;
 
     return (
@@ -35,12 +43,14 @@ export function MedicineBulletDay({ medicine, color, onPress, time, onCheck }: M
                 <Text className="text-gray-700 font-Milliard-Medium text-xl">{medicine.name}</Text>
                 <Text className={`text-gray-700 font-Milliard-Medium px-2 py-1 border border-gray-300 rounded-full  ${medicine.amountRemaining === 0 ? " bg-red-400" : "bg-gray-100/75"}`}>{medicine.amountRemaining} / {medicine.totalQuantity} Remaining</Text>
             </View>
-            <View className="flex flex-col w-[25%] justify-center items-center">
+            <View className="flex flex-col w-[25%] items-end">
                 <Pressable
-                    className={`flex flex-col w-[80%] h-16 justify-center items-center rounded-3xl border border-gray-300 active:opacity-55 ${isTaken ? "bg-green-400" : "bg-gray-100/75"}`}
-                    onPress={onCheck}
+                    className={`flex flex-col w-[80%] h-16 justify-center items-center rounded-3xl border border-gray-300 active:opacity-55 ${isTaken ? "bg-teal-300" : "bg-gray-100/75"}`}
+                    onPress={() => {
+                        onCheck();
+                    }}
                 >
-                    <Entypo name="check" size={24} color={isTaken ? "white" : "black"} />
+                    <Entypo name="check" size={24} color={"white"} />
                 </Pressable>
             </View>
         </Pressable>

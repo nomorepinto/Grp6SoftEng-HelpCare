@@ -55,6 +55,30 @@ export default function MedInfoModal({
               </View>
             </View>
 
+            {/* Amount Remaining */}
+            <View className="mb-4">
+              <Text className="text-slate-700 text-lg font-Milliard-Bold mb-2">
+                Amount Remaining
+              </Text>
+              <View className="border border-slate-300 rounded-xl px-4 py-3 bg-slate-50">
+                <Text className="text-slate-600 text-base font-Milliard-Medium">
+                  {medData?.amountRemaining || 'N/A'}
+                </Text>
+              </View>
+            </View>
+
+            {/* Amount Taken */}
+            <View className="mb-4">
+              <Text className="text-slate-700 text-lg font-Milliard-Bold mb-2">
+                Amount Taken
+              </Text>
+              <View className="border border-slate-300 rounded-xl px-4 py-3 bg-slate-50">
+                <Text className="text-slate-600 text-base font-Milliard-Medium">
+                  {medData?.amountTaken || 'N/A'}
+                </Text>
+              </View>
+            </View>
+
             {/* Times */}
             <View className="mb-4">
               <Text className="text-slate-700 text-lg font-Milliard-Bold mb-2">
