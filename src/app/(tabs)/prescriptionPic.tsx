@@ -19,7 +19,7 @@ export default function PrescriptionPic() {
     const [tutorialModalVisible, setTutorialModalVisible] = useState(false);
     const [photos, setPhotos] = useState<any>([]);
     const [photoModalVisible, setPhotoModalVisible] = useState(false);
-    const [selectedPhoto, setSelectedPhoto] = useState<string>('');
+    const [selectedPhoto, setSelectedPhoto] = useState<any>(undefined);
     const cameraRef = useRef<CameraView>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [warningModalVisible, setWarningModalVisible] = useState(false);
@@ -145,11 +145,11 @@ export default function PrescriptionPic() {
                             horizontal={true}
                             showsHorizontalScrollIndicator={false}
                             contentContainerStyle={{ gap: 5 }}
-                            className="rounded-xl border"
+                            className="rounded-xl"
                         >
                             {
                                 photos.map((photo: any, index: any) => (
-                                    <Pressable key={index} onPress={() => { setSelectedPhoto(photo.uri); setPhotoModalVisible(true) }}>
+                                    <Pressable key={index} onPress={() => { setSelectedPhoto(photo); setPhotoModalVisible(true) }}>
                                         <Image source={{ uri: photo.uri }} className="w-20 h-28 rounded-lg border border-white" resizeMode="cover" />
                                     </Pressable>
                                 ))
@@ -160,8 +160,13 @@ export default function PrescriptionPic() {
                 <View className="flex flex-col gap-2 justify-center items-center w-full">
                     <Button placeholder="Take Picture" onPress={() => takePicture()} width="w-full" />
                     <Button placeholder="Upload Photos"
-                        onPress={() => {
-                            photos.length > 0 ? photos.map((photo: any) => uploadPhotos(photo)) : setWarningText("No photos taken yet"); setWarningModalVisible(true);
+                        onPress={async () => {
+                            if (photos.length > 0) {
+                                await Promise.all(photos.map((photo: any) => uploadPhotos(photo)));
+                            } else {
+                                setWarningText("No photos taken yet");
+                                setWarningModalVisible(true);
+                            }
                         }}
                         width="w-full" />
 

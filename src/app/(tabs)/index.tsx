@@ -313,7 +313,7 @@ export default function Home() {
                 onPageSelected={(e) => setCurrentPage(e.nativeEvent.position)}
               >
                 <View key="1" className="flex flex-col gap-2 w-full h-full ml-5">
-                  <Text className="text-gray-700 font-Milliard-ExtraBold text-3xl rounded-full bg-white px-5 py-2 w-[90%]">{dayMap[new Date(currentDate).getDay()]}</Text>
+                  <Text className="text-gray-700 font-Milliard-ExtraBold text-3xl rounded-full bg-white px-5 py-2 w-[90%]">{dayMap[new Date(currentDate).getDay()]} -  {new Date(currentDate).toLocaleString('en-US', { month: 'short', day: 'numeric' })}</Text>
                   <ScrollView className="flex-1">
                     {hours.map((hour: groupedMedsByHours, index: number) => (
                       <DayScheduleBullet
