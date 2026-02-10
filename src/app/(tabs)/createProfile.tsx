@@ -64,6 +64,11 @@ export default function CreateProfile() {
             router.replace("/prescriptionPic");
         } catch (error) {
             console.error("Error saving profile:", error);
+        } finally {
+            setPatientName("");
+            setAge("");
+            setAffliction("");
+            setWarningModalVisible(false);
         }
     };
 
