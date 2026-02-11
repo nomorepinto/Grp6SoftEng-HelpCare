@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, ActivityIndicator, Platform } from 'react-native';
+import { View, Text, ScrollView, ActivityIndicator } from 'react-native';
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useRouter, useFocusEffect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -13,14 +13,12 @@ import PagerView from 'react-native-pager-view';
 import MedInfoModal from '@/components/medInfoModal';
 import Animated, {
   useSharedValue, useAnimatedStyle,
-  interpolateColor,
   withTiming
 } from 'react-native-reanimated';
 import { Calendar } from '@marceloterreiro/flash-calendar';
 import WarningModal from '@/components/warningModal';
-import * as Device from 'expo-device';
-import * as Notifications from 'expo-notifications';
-import Constants from 'expo-constants'
+import useNotifications from '@/components/functions/useNotifications';
+import { timeStringToCountdown } from '@/components/functions/timeUtils';
 
 
 export default function Home() {
@@ -32,9 +30,11 @@ export default function Home() {
   const [isMedInfoModalOpen, setIsMedInfoModalOpen] = useState(false);
   const [selectedMed, setSelectedMed] = useState<medicine | null>(null);
   const [isWarningModalOpen, setIsWarningModalOpen] = useState(false);
+  const { expoPushToken, notification, scheduleNotification, error } = useNotifications();
 
   useFocusEffect(
     useCallback(() => {
+      scheduleNotification("Test Notification", "This is a test notification", {}, 5);
       const fetchProfiles = async () => {
         try {
           const storedProfiles = await AsyncStorage.getItem('profileArray');
@@ -213,6 +213,41 @@ export default function Home() {
 
     return groupedHours;
   }, [selectedProfile, currentDate]);
+
+  useEffect(() => {
+    // Cancel all previous notifications for this profile
+    const scheduledIds: string[] = [];
+
+    hours.forEach((hour: groupedMedsByHours) => {
+      hour.medicines.forEach((medicine: medicine) => {
+        medicine.times.forEach((time: { time: string; isTaken: boolean }) => {
+          // Skip if already taken
+          if (time.isTaken) return;
+
+          const countdown = timeStringToCountdown(time.time);
+
+          // Only schedule if countdown is positive (future time)
+          if (countdown > 0) {
+            const notificationId = `${medicine.id}-${time.time}`;
+            scheduleNotification(
+              "Take your medicine",
+              medicine.name,
+              { id: medicine.id, notificationId },
+              countdown
+            );
+            scheduledIds.push(notificationId);
+          }
+        });
+      });
+    });
+
+    // Cleanup: cancel notifications when dependencies change
+    return () => {
+      scheduledIds.forEach(id => {
+        // cancelNotification(id); // Add this if your notification system supports it
+      });
+    };
+  }, [hours]);
 
   const days: groupedMedsByDays[] = useMemo(() => {
     if (!selectedProfile?.medicineSchedule) return [];

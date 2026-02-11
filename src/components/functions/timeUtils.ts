@@ -20,3 +20,24 @@ export const format24to12 = (time24: string): string => {
 
     return `${hours12}:${minutesStr} ${period}`;
 };
+
+export function timeStringToCountdown(timeString: string): number {
+    const [hours, minutes] = timeString.split(':').map(Number);
+
+    const targetDate = new Date();
+    targetDate.setHours(hours, minutes, 0, 0);
+
+    let ms = targetDate.getTime();
+    const now = Date.now();
+
+    // If the time has passed today, schedule for tomorrow
+    if (ms < now) {
+        targetDate.setDate(targetDate.getDate() + 1);
+        ms = targetDate.getTime();
+    }
+
+    const countdown = (ms - now) / 1000;
+
+    return countdown;
+}
+
