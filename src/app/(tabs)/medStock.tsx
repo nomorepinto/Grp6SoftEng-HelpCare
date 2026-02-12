@@ -192,10 +192,8 @@ export default function MedStock() {
 
                 <ScrollView className="flex-1 px-6 py-4">
                     {medicines.length === 0 ? (
-                        <View className="flex-1 justify-center items-center py-12">
-                            <Text className="text-gray-400 text-base">
-                                No medicines added yet
-                            </Text>
+                        <View className="flex w-full items-center justify-center mt-60">
+                            <Text className="text-3xl font-Milliard-ExtraBold text-pink-500 opacity-50">No medicines added yet</Text>
                         </View>
                     ) : (
                         <View className="gap-4">

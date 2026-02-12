@@ -18,6 +18,7 @@ import Animated, {
 import { Calendar } from '@marceloterreiro/flash-calendar';
 import WarningModal from '@/components/warningModal';
 import useNotifications from '@/components/functions/useNotifications';
+import HowManyTakenModal from '@/components/howManyTakenModal';
 import { timeStringToCountdown } from '@/components/functions/timeUtils';
 
 
@@ -31,6 +32,8 @@ export default function Home() {
   const [selectedMed, setSelectedMed] = useState<medicine | null>(null);
   const [isWarningModalOpen, setIsWarningModalOpen] = useState(false);
   const { expoPushToken, notification, scheduleNotification, error } = useNotifications();
+  const [isHowManyTakenModalOpen, setIsHowManyTakenModalOpen] = useState(false);
+  const [howManyTaken, setHowManyTaken] = useState('');
 
   useFocusEffect(
     useCallback(() => {
@@ -247,7 +250,7 @@ export default function Home() {
         // cancelNotification(id); // Add this if your notification system supports it
       });
     };
-  }, [hours]);
+  }, [hours, currentDate]);
 
   const days: groupedMedsByDays[] = useMemo(() => {
     if (!selectedProfile?.medicineSchedule) return [];
