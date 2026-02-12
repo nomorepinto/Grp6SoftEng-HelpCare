@@ -64,10 +64,6 @@ export default function Home() {
   // 5. Derived State (useMemo)
   // ----------------------------------------------------------------------
   const selectedProfile = useMemo(() => {
-    profileArray.forEach((profile: Profile) => {
-      console.log(profile.name + " is selected: " + [profile.isSelected]);
-    });
-    console.log("Selected profile: " + profileArray.find((profile: Profile) => profile.isSelected)?.name);
     return profileArray.find((profile: Profile) => profile.isSelected);
   }, [profileArray]);
 
@@ -173,17 +169,14 @@ export default function Home() {
           }
         } catch (e) {
           console.error("Failed to fetch profiles [index.tsx]", e);
+        } finally {
+          setIsLoading(false);
         }
       };
       fetchProfiles();
     }, [])
   );
 
-  useEffect(() => {
-    if (selectedProfile) {
-      setIsLoading(false);
-    }
-  }, [selectedProfile]);
 
   // Date Check Interval
   useEffect(() => {
@@ -242,12 +235,12 @@ export default function Home() {
 
   // Animation Trigger
   useEffect(() => {
-    if (isMedInfoModalOpen) {
+    if (isMedInfoModalOpen || isWarningModalOpen || isHowManyTakenModalOpen) {
       opacity.value = withTiming(0.25);
     } else {
       opacity.value = withTiming(1);
     }
-  }, [isMedInfoModalOpen]);
+  }, [isMedInfoModalOpen, isWarningModalOpen, isHowManyTakenModalOpen]);
 
 
   // ----------------------------------------------------------------------
