@@ -20,6 +20,7 @@ import WarningModal from '@/components/warningModal';
 import useNotifications from '@/components/functions/useNotifications';
 import HowManyTakenModal from '@/components/howManyTakenModal';
 import { timeStringToCountdown } from '@/components/functions/timeUtils';
+import { pinkCalendarTheme } from '@/components/themes/pinkCalendarTheme';
 
 
 export default function Home() {
@@ -37,9 +38,9 @@ export default function Home() {
   const [selectedHour, setSelectedHour] = useState<groupedMedsByHours | null>(null);
   const [selectedMedicineID, setSelectedMedicineID] = useState<string | null>(null);
 
+
   useFocusEffect(
     useCallback(() => {
-      scheduleNotification("Test Notification", "This is a test notification", {}, 5);
       const fetchProfiles = async () => {
         try {
           const storedProfiles = await AsyncStorage.getItem('profileArray');
@@ -147,7 +148,7 @@ export default function Home() {
       if (med.id === medicine.id) {
         const timeToUpdate = med.times.find(t => t.time === timeStr);
         if (timeToUpdate) {
-          med.amountRemaining = timeToUpdate.isTaken ? med.amountRemaining : (med.amountRemaining > 0 ? med.amountRemaining - 1 : 0);
+          med.amountRemaining = timeToUpdate.isTaken ? med.amountRemaining : (med.amountRemaining > 0 ? med.amountRemaining - amountToBeTaken : 0);
           timeToUpdate.isTaken = true;
           med.amountTaken = timeToUpdate.isTaken ? med.amountTaken + amountToBeTaken : med.amountTaken;
         }
@@ -398,6 +399,7 @@ export default function Home() {
                         startId: new Date(appointment.date).toISOString().split('T')[0],
                         endId: new Date(appointment.date).toISOString().split('T')[0]
                       }))}
+                      theme={pinkCalendarTheme}
                     />
                   </View>
                   <View className="max-h-[40%]">
@@ -431,3 +433,4 @@ export default function Home() {
     </Animated.View>
   );
 }
+

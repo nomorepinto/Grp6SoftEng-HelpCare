@@ -47,6 +47,7 @@ export function MedicineBulletDay({ medicine, color, onPress, time, onCheck }: M
                 <Pressable
                     className={`flex flex-col w-[80%] h-16 justify-center items-center rounded-3xl border border-gray-300 active:opacity-55 ${isTaken ? "bg-teal-300" : "bg-gray-100/75"}`}
                     onPress={() => {
+                        if (isTaken) return;
                         onCheck();
                     }}
                 >

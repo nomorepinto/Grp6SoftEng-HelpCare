@@ -2,4 +2,3 @@ doctor's appointment calendar color matching/customization
 doctor type implementation
 notification/ text message implementation
 stale state of med box after prescription picture
-multiple medicines taken per press (e.g. 2 tablets)

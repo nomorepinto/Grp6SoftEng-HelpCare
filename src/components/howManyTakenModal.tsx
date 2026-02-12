@@ -33,15 +33,28 @@ export default function HowManyTakenModal({ isOpen, onClose, selectedHour, selec
                         placeholder="0"
                         value={howManyTaken}
                         onChangeText={setHowManyTaken}
-                        width="w-1/2"
+                        width="w-1/2 "
                         isNumeric={true}
                     />
-
-                    <Button
-                        placeholder="Close"
-                        onPress={() => { howManyTaken === '' ? null : takeMedicine(selectedHour?.medicines.find((med: medicine) => med.id === selectedMedicineID) ?? null, selectedHour?.hour ?? null, Number(howManyTaken)); onClose(); setHowManyTaken(''); }}
-                        width="w-1/2"
-                    />
+                    <View className="flex flex-row w-full justify-center gap-2 mt-4">
+                        <Button
+                            placeholder="Cancel"
+                            onPress={() => { onClose(); setHowManyTaken(''); }}
+                            width="w-1/2"
+                        />
+                        <Button
+                            placeholder="Confirm"
+                            onPress={() => {
+                                howManyTaken === '' ? null :
+                                    takeMedicine(selectedHour?.medicines.find((med: medicine) => med.id === selectedMedicineID) ?? null, selectedHour?.hour ??
+                                        null,
+                                        Number(howManyTaken));
+                                onClose();
+                                setHowManyTaken('');
+                            }}
+                            width="w-1/2"
+                        />
+                    </View>
                 </View>
             </View>
         </Modal>
