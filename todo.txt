@@ -1,4 +1,3 @@
 doctor's appointment calendar color matching/customization
 doctor type implementation
-notification/ text message implementation
 stale state of med box after prescription picture

@@ -6,12 +6,13 @@ const activeColor = colors.pink[500];
 const activeTextColor = colors.black;
 const idleBackgroundColor = colors.white;
 
-const baseRadius = 4;
+const baseRadius = 30;
 const todayRadius = 30;
 
 const headerAlignment = "left" as const;
-const headerWeight = "700" as const;
+const headerWeight = 1000;
 const headerFamily = "Milliard-ExtraBold";
+const bodyFamily = "Milliard-Medium";
 
 const separatorWidth = 1;
 const separatorStyle = "solid" as const;
@@ -20,9 +21,10 @@ export const pinkCalendarTheme: CalendarTheme = {
     rowMonth: {
         content: {
             textAlign: headerAlignment,
-            color: textColor,
-            fontWeight: headerWeight,
-            fontFamily: headerFamily
+            color: activeColor,
+            fontFamily: headerFamily,
+            fontSize: 20,
+            height: 40
         },
     },
     rowWeek: {
@@ -32,7 +34,7 @@ export const pinkCalendarTheme: CalendarTheme = {
             borderStyle: separatorStyle,
         },
     },
-    itemWeekName: { content: { color: textColor } },
+    itemWeekName: { content: { color: textColor, fontFamily: headerFamily, fontSize: 16 } },
     itemDayContainer: {
         activeDayFiller: {
             backgroundColor: activeColor,
@@ -45,17 +47,20 @@ export const pinkCalendarTheme: CalendarTheme = {
                 borderRadius: baseRadius,
             },
             content: {
-                color: isWeekend && !isPressed ? textColor : activeTextColor,
+                color: isPressed ? colors.white : textColor,
+                fontFamily: bodyFamily,
+                fontSize: 16,
             },
         }),
         today: ({ isPressed }) => ({
             container: {
-                borderColor: textColor,
+                borderColor: activeColor,
                 borderRadius: isPressed ? baseRadius : todayRadius,
                 backgroundColor: isPressed ? activeColor : idleBackgroundColor,
             },
             content: {
                 color: isPressed ? activeTextColor : textColor,
+                fontFamily: bodyFamily,
             },
         }),
         active: ({ isEndOfRange, isStartOfRange }) => ({
@@ -67,7 +72,8 @@ export const pinkCalendarTheme: CalendarTheme = {
                 borderBottomRightRadius: isEndOfRange ? baseRadius : 0,
             },
             content: {
-                color: activeTextColor,
+                color: colors.white,
+                fontFamily: bodyFamily,
             },
         }),
     },

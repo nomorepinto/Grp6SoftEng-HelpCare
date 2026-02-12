@@ -10,10 +10,10 @@ interface ButtonProps {
 export default function LightButton({ placeholder, onPress, width }: ButtonProps) {
     return (
         <Pressable
-            className={`px-5 py-2 ${width} rounded-full font-Milliard-Medium bg-pink-50 border border-pink-500 active:bg-pink-300 active:scale-95 items-center justify-center text-xl`}
+            className={`px-5 py-2 ${width} rounded-full font-Milliard-Medium bg-white border border-gray-200 active:scale-95 items-center justify-center text-xl`}
             onPress={onPress}
         >
-            <Text className="text-pink-500 font-Milliard-Medium text-xl">{placeholder}</Text>
+            <Text className="text-gray-700 font-Milliard-ExtraBold text-xl">{placeholder}</Text>
         </Pressable>
     );
 }

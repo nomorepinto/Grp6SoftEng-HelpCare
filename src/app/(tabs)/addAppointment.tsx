@@ -11,6 +11,7 @@ import { useFocusEffect, useRouter } from 'expo-router';
 import * as Crypto from 'expo-crypto';
 import { format24to12 } from '@/components/functions/timeUtils';
 import { Calendar } from '@marceloterreiro/flash-calendar';
+import { pinkCalendarTheme } from '@/components/themes/pinkCalendarTheme';
 
 export default function AddAppointment() {
     const router = useRouter();
@@ -153,8 +154,8 @@ export default function AddAppointment() {
 
                     <View className="flex flex-col mt-3">
                         <Text className="text-pink-500 text-xl font-Milliard-Heavy mb-2">Select Date</Text>
-                        <View className="border border-pink-500 rounded-3xl p-2 mb-2 bg-pink-50">
-                            <Text className="text-pink-600 text-center font-Milliard-ExtraBold py-2">{dateString}</Text>
+                        <View className="border border-gray-500 rounded-3xl p-5 mb-2 bg-white">
+                            <Text className="text-gray-700 text-center font-Milliard-ExtraBold mb-5 text-xl rounded-full border border-gray-300 p-2">{dateString}</Text>
                             <Calendar
                                 calendarMonthId={new Date(selectedDate).toISOString().split('T')[0].substring(0, 7) + '-01'}
                                 onCalendarDayPress={(dateId) => {
@@ -169,6 +170,8 @@ export default function AddAppointment() {
                                     startId: new Date(appointment.date).toISOString().split('T')[0],
                                     endId: new Date(appointment.date).toISOString().split('T')[0]
                                 })) || [])}
+                                theme={pinkCalendarTheme}
+
                             />
                         </View>
                     </View>
@@ -177,7 +180,7 @@ export default function AddAppointment() {
                         <Text className="text-pink-500 text-xl font-Milliard-Heavy mb-2">Time</Text>
                         <TouchableOpacity
                             onPress={() => setShowTimePicker(true)}
-                            className="w-full border border-pink-500 rounded-3xl p-4 bg-pink-100 items-center"
+                            className="w-full border border-gray-500 rounded-3xl p-4 bg-white items-center"
                         >
                             <Text className="text-pink-500 text-2xl font-Milliard-ExtraBold">
                                 {time ? format24to12(time) : "Select Time"}

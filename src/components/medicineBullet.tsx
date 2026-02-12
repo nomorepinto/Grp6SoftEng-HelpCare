@@ -45,13 +45,13 @@ export function MedicineBulletDay({ medicine, color, onPress, time, onCheck }: M
             </View>
             <View className="flex flex-col w-[25%] items-end">
                 <Pressable
-                    className={`flex flex-col w-[80%] h-16 justify-center items-center rounded-3xl border border-gray-300 active:opacity-55 ${isTaken ? "bg-teal-300" : "bg-gray-100/75"}`}
+                    className={`flex flex-col w-[80%] h-16 justify-center items-center rounded-3xl  active:opacity-55 ${isTaken ? "bg-pink-500" : " border border-gray-300 bg-gray-100/75"}`}
                     onPress={() => {
                         if (isTaken) return;
                         onCheck();
                     }}
                 >
-                    <Entypo name="check" size={24} color={"white"} />
+                    <Entypo name="check" size={24} color={`${isTaken ? "white" : "gray"}`} />
                 </Pressable>
             </View>
         </Pressable>

@@ -4,6 +4,8 @@ import Button from './button';
 import TextBox from './textBox';
 import { medicine, day } from '../../types';
 import clsx from 'clsx';
+import DateTimePickerModal from "react-native-modal-datetime-picker";
+import { format24to12 } from '@/components/functions/timeUtils';
 
 interface MedEditModalProps {
   isOpen: boolean;
@@ -21,7 +23,8 @@ export default function MedEditModal({
   const [name, setName] = useState('');
   const [quantity, setQuantity] = useState('');
   const [amountRemaining, setAmountRemaining] = useState('');
-  const [times, setTimes] = useState('');
+  const [times, setTimes] = useState<string[]>([]);
+  const [showTimePicker, setShowTimePicker] = useState(false);
   const [days, setDays] = useState<day[]>([]);
   const [color, setColor] = useState('');
 
@@ -35,7 +38,7 @@ export default function MedEditModal({
       setName(medData.name);
       setQuantity(medData.totalQuantity.toString());
       setAmountRemaining(medData.amountRemaining.toString());
-      setTimes(medData.times.map(t => t.time).join(', '));
+      setTimes(medData.times.map(t => t.time));
       setDays(medData.days);
       setColor(medData.color);
     }
@@ -49,6 +52,18 @@ export default function MedEditModal({
     );
   };
 
+  const handleConfirmTime = (date: Date) => {
+    setShowTimePicker(false);
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    const time24 = `${hours}:${minutes}`;
+    setTimes([...times, time24]);
+  };
+
+  const removeTime = (index: number) => {
+    setTimes(times.filter((_, i) => i !== index));
+  };
+
   const handleUpdate = () => {
     if (medData && onUpdate) {
       onUpdate({
@@ -56,7 +71,7 @@ export default function MedEditModal({
         name,
         totalQuantity: parseInt(quantity) || 0,
         amountRemaining: parseInt(amountRemaining) || 0,
-        times: times.split(',').map(t => t.trim()).filter(t => t !== '').map(t => ({ time: t, isTaken: false })),
+        times: times.map(t => ({ time: t, isTaken: false })),
         days,
         color,
       });
@@ -119,14 +134,38 @@ export default function MedEditModal({
             <View className="mb-4" />
 
             {/* Times Input */}
-            <Text className="text-gray-700 font-semibold mb-1">Times (comma-separated)</Text>
-            <TextBox
-              width="w-full"
-              placeholder="e.g., 08:00, 14:00, 20:00"
-              onChangeText={setTimes}
-              value={times}
+            <Text className="text-gray-700 font-semibold mb-1">Times</Text>
+            <View className="flex flex-row w-full justify-between mb-2">
+              <Button placeholder="Add Time" onPress={() => setShowTimePicker(true)} width="w-full" />
+            </View>
+            <DateTimePickerModal
+              isVisible={showTimePicker}
+              mode="time"
+              display="spinner"
+              minuteInterval={30}
+              onConfirm={handleConfirmTime}
+              onCancel={() => setShowTimePicker(false)}
             />
-            <View className="mb-4" />
+            <View className="max-h-40 mb-4">
+              <ScrollView className="flex-grow-0" nestedScrollEnabled={true}>
+                <View className="flex flex-col gap-2 mt-2">
+                  {times.length === 0 ? (
+                    <View className="flex flex-row justify-center items-center border border-pink-500 rounded-3xl p-5 opacity-50">
+                      <Text className="text-pink-500 text-xl font-Milliard-ExtraBold">No times added</Text>
+                    </View>
+                  ) : (
+                    times.map((t, index) => (
+                      <View key={index} className="flex flex-row justify-between items-center bg-pink-100 p-3 rounded-lg">
+                        <Text className="text-pink-500 text-xl font-Milliard-Medium">{format24to12(t)}</Text>
+                        <Pressable onPress={() => removeTime(index)}>
+                          <Text className="text-pink-500 text-xl font-Milliard-Bold">✕</Text>
+                        </Pressable>
+                      </View>
+                    ))
+                  )}
+                </View>
+              </ScrollView>
+            </View>
 
             {/* Days Selection */}
             <Text className="text-gray-700 font-semibold mb-2">Days</Text>

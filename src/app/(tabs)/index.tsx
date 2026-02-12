@@ -24,21 +24,142 @@ import { pinkCalendarTheme } from '@/components/themes/pinkCalendarTheme';
 
 
 export default function Home() {
+  // ----------------------------------------------------------------------
+  // 1. Setup & Custom Hooks
+  // ----------------------------------------------------------------------
+  const router = useRouter();
+  const { expoPushToken, notification, scheduleNotification, error } = useNotifications();
 
+  // ----------------------------------------------------------------------
+  // 2. State Definitions
+  // ----------------------------------------------------------------------
   const [isLoading, setIsLoading] = useState(true);
   const [profileArray, setProfileArray] = useState<Profile[]>([]);
   const [currentPage, setCurrentPage] = useState(0);
   const [currentDate, setCurrentDate] = useState(Date.now());
+
+  // Modal States
   const [isMedInfoModalOpen, setIsMedInfoModalOpen] = useState(false);
-  const [selectedMed, setSelectedMed] = useState<medicine | null>(null);
   const [isWarningModalOpen, setIsWarningModalOpen] = useState(false);
-  const { expoPushToken, notification, scheduleNotification, error } = useNotifications();
   const [isHowManyTakenModalOpen, setIsHowManyTakenModalOpen] = useState(false);
-  const [howManyTaken, setHowManyTaken] = useState('');
+
+  // Selection States
+  const [selectedMed, setSelectedMed] = useState<medicine | null>(null);
   const [selectedHour, setSelectedHour] = useState<groupedMedsByHours | null>(null);
   const [selectedMedicineID, setSelectedMedicineID] = useState<string | null>(null);
 
+  // ----------------------------------------------------------------------
+  // 3. Animation Values
+  // ----------------------------------------------------------------------
+  const opacity = useSharedValue(0);
 
+  // ----------------------------------------------------------------------
+  // 4. Constants
+  // ----------------------------------------------------------------------
+  const dayMap = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const dayAbbreviationMap: day[] = ["Su", "M", "T", "W", "Th", "F", "S"];
+  const colors = require("tailwindcss/colors");
+
+  // ----------------------------------------------------------------------
+  // 5. Derived State (useMemo)
+  // ----------------------------------------------------------------------
+  const selectedProfile = useMemo(() => {
+    profileArray.forEach((profile: Profile) => {
+      console.log(profile.name + " is selected: " + [profile.isSelected]);
+    });
+    console.log("Selected profile: " + profileArray.find((profile: Profile) => profile.isSelected)?.name);
+    return profileArray.find((profile: Profile) => profile.isSelected);
+  }, [profileArray]);
+
+  const hours: groupedMedsByHours[] = useMemo(() => {
+
+    if (isLoading || !selectedProfile || !selectedProfile.medicineSchedule) {
+      console.log("No medicine schedule");
+      return [];
+    }
+    const currentDayAbbreviation = dayAbbreviationMap[new Date(currentDate).getDay()];
+    const todaysMedicines = selectedProfile.medicineSchedule.filter((medicine: medicine) =>
+      medicine.days.includes(currentDayAbbreviation)
+    );
+    // Get all unique hours from today's medicines
+    const allTimes = todaysMedicines.flatMap((medicine: medicine) => medicine.times);
+    // Deduplicate by time string
+    const uniqueTimeStrings = [...new Set(allTimes.map(t => t.time))];
+    // Sort unique hours chronologically
+    const sortedTimeStrings = uniqueTimeStrings.sort((a, b) => {
+      const [hoursA, minutesA] = a.split(':').map(Number);
+      const [hoursB, minutesB] = b.split(':').map(Number);
+      const totalMinutesA = hoursA * 60 + minutesA;
+      const totalMinutesB = hoursB * 60 + minutesB;
+      return totalMinutesA - totalMinutesB;
+    });
+    // Group medicines by hour string
+    const groupedHours = sortedTimeStrings.map((timeStr: string) => {
+      return {
+        hour: timeStr,
+        medicines: todaysMedicines.filter((medicine: medicine) =>
+          medicine.times.some(t => t.time === timeStr)
+        )
+      };
+    });
+
+    return groupedHours;
+  }, [selectedProfile, currentDate]);
+
+  const days: groupedMedsByDays[] = useMemo(() => {
+    if (!selectedProfile?.medicineSchedule) return [];
+
+    // Get all unique days from all medicines
+    const daysArray = selectedProfile.medicineSchedule.flatMap((medicine: medicine) => medicine.days);
+    const uniqueDays = [...new Set(daysArray)];
+
+    // Sort days in week order
+    const dayOrder: day[] = ["M", "T", "W", "Th", "F", "S", "Su"];
+    const sortedDays = uniqueDays.sort((a, b) => {
+      return dayOrder.indexOf(a) - dayOrder.indexOf(b);
+    });
+
+    // Group medicines by day
+    const groupedDays = sortedDays.map((day: day) => {
+      return {
+        day: day,
+        medicines: selectedProfile.medicineSchedule.filter((medicine: medicine) =>
+          medicine.days.includes(day)
+        )
+      };
+    });
+
+    return groupedDays;
+  }, [selectedProfile, currentDate, isLoading]);
+
+  const groupedAppointments: groupedAppointmentsByDate[] = useMemo(() => {
+    if (!selectedProfile?.appointments) return [];
+
+    const grouped = selectedProfile.appointments.reduce((acc: { [key: number]: appointment[] }, app) => {
+      const date = new Date(app.date);
+      date.setHours(0, 0, 0, 0);
+      const timestamp = date.getTime();
+
+      if (!acc[timestamp]) {
+        acc[timestamp] = [];
+      }
+      acc[timestamp].push(app);
+      return acc;
+    }, {});
+
+    return Object.entries(grouped)
+      .map(([timestamp, appointments]) => ({
+        date: parseInt(timestamp),
+        appointments: appointments.sort((a, b) => a.time.localeCompare(b.time))
+      }))
+      .sort((a, b) => a.date - b.date);
+  }, [selectedProfile]);
+
+  // ----------------------------------------------------------------------
+  // 6. Effects
+  // ----------------------------------------------------------------------
+
+  // Init: Fetch Profiles
   useFocusEffect(
     useCallback(() => {
       const fetchProfiles = async () => {
@@ -52,35 +173,19 @@ export default function Home() {
           }
         } catch (e) {
           console.error("Failed to fetch profiles [index.tsx]", e);
-        } finally {
-          setIsLoading(false);
         }
       };
       fetchProfiles();
-    }, []));
-
-  const selectedProfile = useMemo(() => {
-    return profileArray.find((profile: Profile) => profile.isSelected);
-  }, [profileArray]);
-
-  const opacity = useSharedValue(0);
-
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      opacity: withTiming(opacity.value, { duration: 50 })
-    };
-  });
+    }, [])
+  );
 
   useEffect(() => {
-    if (isMedInfoModalOpen) {
-      opacity.value = withTiming(0.25);
-    } else {
-      opacity.value = withTiming(1);
+    if (selectedProfile) {
+      setIsLoading(false);
     }
-  }, [isMedInfoModalOpen]);
+  }, [selectedProfile]);
 
-
-
+  // Date Check Interval
   useEffect(() => {
     const interval = setInterval(() => {
       const now = new Date();
@@ -100,11 +205,63 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [currentDate]);
 
-  const dayMap = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-  const dayAbbreviationMap: day[] = ["Su", "M", "T", "W", "Th", "F", "S"];
+  // Notifications
+  useEffect(() => {
+    // Cancel all previous notifications for this profile
+    const scheduledIds: string[] = [];
 
-  const router = useRouter();
+    hours.forEach((hour: groupedMedsByHours) => {
+      hour.medicines.forEach((medicine: medicine) => {
+        medicine.times.forEach((time: { time: string; isTaken: boolean }) => {
+          // Skip if already taken
+          if (time.isTaken) return;
 
+          const countdown = timeStringToCountdown(time.time);
+
+          // Only schedule if countdown is positive (future time)
+          if (countdown > 0) {
+            const notificationId = `${medicine.id}-${time.time}`;
+            scheduleNotification(
+              "Take your medicine",
+              medicine.name,
+              { id: medicine.id, notificationId },
+              countdown
+            );
+            scheduledIds.push(notificationId);
+          }
+        });
+      });
+    });
+
+    return () => {
+      scheduledIds.forEach(id => {
+        // cancelNotification(id);
+      });
+    };
+  }, [hours, currentDate]);
+
+  // Animation Trigger
+  useEffect(() => {
+    if (isMedInfoModalOpen) {
+      opacity.value = withTiming(0.25);
+    } else {
+      opacity.value = withTiming(1);
+    }
+  }, [isMedInfoModalOpen]);
+
+
+  // ----------------------------------------------------------------------
+  // 7. Animation Styles
+  // ----------------------------------------------------------------------
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      opacity: withTiming(opacity.value, { duration: 50 })
+    };
+  });
+
+  // ----------------------------------------------------------------------
+  // 8. Helper Functions & Event Handlers
+  // ----------------------------------------------------------------------
   const saveProfileArray = async (updatedProfileArray: Profile[]) => {
     try {
       await AsyncStorage.setItem('profileArray', JSON.stringify(updatedProfileArray));
@@ -118,6 +275,7 @@ export default function Home() {
       const updatedProfileArray = profileArray.map((p: Profile) => profile.id === p.id ? { ...p, isSelected: true } : { ...p, isSelected: false });
       setProfileArray(updatedProfileArray);
       await saveProfileArray(updatedProfileArray);
+      console.log("Profile selected " + updatedProfileArray.find((p: Profile) => p.isSelected)?.name);
     } catch (e) {
       console.error("Failed to select profile [index.tsx]", e);
     }
@@ -180,136 +338,15 @@ export default function Home() {
     await saveProfileArray(updatedProfileArray);
   };
 
-
-  const hours: groupedMedsByHours[] = useMemo(() => {
-    if (!selectedProfile?.medicineSchedule) return [];
-
-    const currentDayAbbreviation = dayAbbreviationMap[new Date(currentDate).getDay()];
-
-    const todaysMedicines = selectedProfile.medicineSchedule.filter((medicine: medicine) =>
-      medicine.days.includes(currentDayAbbreviation)
-    );
-
-    // Get all unique hours from today's medicines
-    const allTimes = todaysMedicines.flatMap((medicine: medicine) => medicine.times);
-
-    // Deduplicate by time string
-    const uniqueTimeStrings = [...new Set(allTimes.map(t => t.time))];
-
-    // Sort unique hours chronologically
-    const sortedTimeStrings = uniqueTimeStrings.sort((a, b) => {
-      const [hoursA, minutesA] = a.split(':').map(Number);
-      const [hoursB, minutesB] = b.split(':').map(Number);
-
-      const totalMinutesA = hoursA * 60 + minutesA;
-      const totalMinutesB = hoursB * 60 + minutesB;
-
-      return totalMinutesA - totalMinutesB;
-    });
-
-    // Group medicines by hour string
-    const groupedHours = sortedTimeStrings.map((timeStr: string) => {
-      return {
-        hour: timeStr,
-        medicines: todaysMedicines.filter((medicine: medicine) =>
-          medicine.times.some(t => t.time === timeStr)
-        )
-      };
-    });
-
-    return groupedHours;
-  }, [selectedProfile, currentDate]);
-
-  useEffect(() => {
-    // Cancel all previous notifications for this profile
-    const scheduledIds: string[] = [];
-
-    hours.forEach((hour: groupedMedsByHours) => {
-      hour.medicines.forEach((medicine: medicine) => {
-        medicine.times.forEach((time: { time: string; isTaken: boolean }) => {
-          // Skip if already taken
-          if (time.isTaken) return;
-
-          const countdown = timeStringToCountdown(time.time);
-
-          // Only schedule if countdown is positive (future time)
-          if (countdown > 0) {
-            const notificationId = `${medicine.id}-${time.time}`;
-            scheduleNotification(
-              "Take your medicine",
-              medicine.name,
-              { id: medicine.id, notificationId },
-              countdown
-            );
-            scheduledIds.push(notificationId);
-          }
-        });
-      });
-    });
-
-    // Cleanup: cancel notifications when dependencies change
-    return () => {
-      scheduledIds.forEach(id => {
-        // cancelNotification(id); // Add this if your notification system supports it
-      });
-    };
-  }, [hours, currentDate]);
-
-  const days: groupedMedsByDays[] = useMemo(() => {
-    if (!selectedProfile?.medicineSchedule) return [];
-
-    // Get all unique days from all medicines
-    const daysArray = selectedProfile.medicineSchedule.flatMap((medicine: medicine) => medicine.days);
-    const uniqueDays = [...new Set(daysArray)];
-
-    // Sort days in week order
-    const dayOrder: day[] = ["M", "T", "W", "Th", "F", "S", "Su"];
-    const sortedDays = uniqueDays.sort((a, b) => {
-      return dayOrder.indexOf(a) - dayOrder.indexOf(b);
-    });
-
-    // Group medicines by day
-    const groupedDays = sortedDays.map((day: day) => {
-      return {
-        day: day,
-        medicines: selectedProfile.medicineSchedule.filter((medicine: medicine) =>
-          medicine.days.includes(day)
-        )
-      };
-    });
-
-    return groupedDays;
-  }, [selectedProfile]);
-
   const handleSelectedHour = (hour: groupedMedsByHours, medicineID: string) => {
     setSelectedHour(hour);
     setSelectedMedicineID(medicineID);
     setIsHowManyTakenModalOpen(true);
   };
 
-  const groupedAppointments: groupedAppointmentsByDate[] = useMemo(() => {
-    if (!selectedProfile?.appointments) return [];
-
-    const grouped = selectedProfile.appointments.reduce((acc: { [key: number]: appointment[] }, app) => {
-      const date = new Date(app.date);
-      date.setHours(0, 0, 0, 0);
-      const timestamp = date.getTime();
-
-      if (!acc[timestamp]) {
-        acc[timestamp] = [];
-      }
-      acc[timestamp].push(app);
-      return acc;
-    }, {});
-
-    return Object.entries(grouped)
-      .map(([timestamp, appointments]) => ({
-        date: parseInt(timestamp),
-        appointments: appointments.sort((a, b) => a.time.localeCompare(b.time))
-      }))
-      .sort((a, b) => a.date - b.date);
-  }, [selectedProfile]);
-
+  // ----------------------------------------------------------------------
+  // 9. Loading Check
+  // ----------------------------------------------------------------------
   if (isLoading) {
     return (
       <View className="flex-1 justify-center items-center bg-white">
@@ -319,13 +356,14 @@ export default function Home() {
     );
   }
 
-  const colors = require("tailwindcss/colors");
-
+  // ----------------------------------------------------------------------
+  // 10. Main Return
+  // ----------------------------------------------------------------------
   return (
     <Animated.View className="flex-1" style={animatedStyle}>
       <NavBar profileArray={profileArray} selectProfile={selectProfile} deleteProfile={deleteProfile} />
       <View className="flex-1 justify-start pt-5 bg-gray-150">
-        {selectedProfile?.medicineSchedule.length === 0 ?
+        {(selectedProfile?.medicineSchedule.length === 0 || selectedProfile?.medicineSchedule.length === undefined || selectedProfile === undefined) ?
           (
             <View className="flex w-full items-center justify-center mt-60">
               <Text className="text-3xl font-Milliard-ExtraBold text-pink-500 opacity-50">No medicines added yet</Text>
@@ -415,7 +453,7 @@ export default function Home() {
                       ))}
                     </ScrollView>
                   </View>
-                  <LightButton placeholder="Add Appointment" onPress={() => router.push('/addAppointment')} width='w-[90%]' />
+                  <Button placeholder="Add Appointment" onPress={() => router.push('/addAppointment')} width='w-[90%]' />
                 </View>
 
               </PagerView>
