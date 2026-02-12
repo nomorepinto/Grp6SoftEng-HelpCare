@@ -34,6 +34,8 @@ export default function Home() {
   const { expoPushToken, notification, scheduleNotification, error } = useNotifications();
   const [isHowManyTakenModalOpen, setIsHowManyTakenModalOpen] = useState(false);
   const [howManyTaken, setHowManyTaken] = useState('');
+  const [selectedHour, setSelectedHour] = useState<groupedMedsByHours | null>(null);
+  const [selectedMedicineID, setSelectedMedicineID] = useState<string | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -138,7 +140,7 @@ export default function Home() {
     }
   }
 
-  const takeMedicine = async (medicine: medicine, timeStr: string) => {
+  const takeMedicine = async (medicine: medicine, timeStr: string, amountToBeTaken: number) => {
     if (!selectedProfile) return;
 
     const updatedMeds = selectedProfile.medicineSchedule.map((med) => {
@@ -147,7 +149,7 @@ export default function Home() {
         if (timeToUpdate) {
           med.amountRemaining = timeToUpdate.isTaken ? med.amountRemaining : (med.amountRemaining > 0 ? med.amountRemaining - 1 : 0);
           timeToUpdate.isTaken = true;
-          med.amountTaken = timeToUpdate.isTaken ? med.amountTaken + 1 : med.amountTaken;
+          med.amountTaken = timeToUpdate.isTaken ? med.amountTaken + amountToBeTaken : med.amountTaken;
         }
       }
       return med;
@@ -278,6 +280,12 @@ export default function Home() {
     return groupedDays;
   }, [selectedProfile]);
 
+  const handleSelectedHour = (hour: groupedMedsByHours, medicineID: string) => {
+    setSelectedHour(hour);
+    setSelectedMedicineID(medicineID);
+    setIsHowManyTakenModalOpen(true);
+  };
+
   const groupedAppointments: groupedAppointmentsByDate[] = useMemo(() => {
     if (!selectedProfile?.appointments) return [];
 
@@ -361,7 +369,7 @@ export default function Home() {
                           setSelectedMed(medicine);
                           setIsMedInfoModalOpen(true);
                         }}
-                        onCheck={takeMedicine}
+                        onCheck={handleSelectedHour}
                       />
                     ))}
                   </ScrollView>
@@ -415,6 +423,7 @@ export default function Home() {
         }
         <WarningModal isOpen={isWarningModalOpen} onClose={() => setIsWarningModalOpen(false)} header="Warning" text="Cannot Deleted Current Profile, Please Select Another Profile Before Deleting." />
         <MedInfoModal isOpen={isMedInfoModalOpen} onClose={() => setIsMedInfoModalOpen(false)} medicine={selectedMed ?? sampleMedicine} />
+        <HowManyTakenModal isOpen={isHowManyTakenModalOpen} onClose={() => setIsHowManyTakenModalOpen(false)} selectedHour={selectedHour ?? { hour: "", medicines: [] }} selectedMedicineID={selectedMedicineID ?? ""} takeMedicine={takeMedicine} />
       </View>
       <View className="flex flex-col items-center pt-5 pb-8 bg-white">
         <Button placeholder="Med Stock" onPress={() => router.push('/medStock')} width='w-3/4' />

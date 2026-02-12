@@ -7,7 +7,7 @@ import { format24to12 } from './functions/timeUtils';
 interface DayScheduleBulletProps {
     hour: groupedMedsByHours;
     selectMedicine: (medicine: medicine) => void;
-    onCheck: (medicine: medicine, time: string) => void;
+    onCheck: (hour: groupedMedsByHours, medicineID: string) => void;
 }
 
 export default function DayScheduleBullet({ hour, selectMedicine, onCheck }: DayScheduleBulletProps) {
@@ -23,7 +23,7 @@ export default function DayScheduleBullet({ hour, selectMedicine, onCheck }: Day
                         color={medicine.color}
                         onPress={() => selectMedicine(medicine)}
                         time={hour.hour}
-                        onCheck={() => onCheck(medicine, hour.hour)}
+                        onCheck={() => onCheck(hour, medicine.id)}
                     />
                 ))}
             </View>

@@ -2,15 +2,17 @@ import { useState } from 'react';
 import { Modal, View, Text, Pressable } from 'react-native';
 import Button from './button';
 import TextBox from './textBox';
+import { groupedMedsByHours, medicine } from 'types';
 
 interface WarningModalProps {
     isOpen: boolean;
     onClose: () => void;
-    text: string;
-    header: string;
+    selectedHour?: groupedMedsByHours;
+    selectedMedicineID?: string;
+    takeMedicine: any;
 }
 
-export default function HowManyTakenModal({ isOpen, onClose, text, header }: WarningModalProps) {
+export default function HowManyTakenModal({ isOpen, onClose, selectedHour, selectedMedicineID, takeMedicine }: WarningModalProps) {
 
     const [howManyTaken, setHowManyTaken] = useState('');
 
@@ -32,11 +34,12 @@ export default function HowManyTakenModal({ isOpen, onClose, text, header }: War
                         value={howManyTaken}
                         onChangeText={setHowManyTaken}
                         width="w-1/2"
+                        isNumeric={true}
                     />
 
                     <Button
                         placeholder="Close"
-                        onPress={() => { howManyTaken === '' ? null : onClose(); setHowManyTaken(''); }}
+                        onPress={() => { howManyTaken === '' ? null : takeMedicine(selectedHour?.medicines.find((med: medicine) => med.id === selectedMedicineID) ?? null, selectedHour?.hour ?? null, Number(howManyTaken)); onClose(); setHowManyTaken(''); }}
                         width="w-1/2"
                     />
                 </View>
