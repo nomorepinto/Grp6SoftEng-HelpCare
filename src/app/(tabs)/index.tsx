@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useRouter, useFocusEffect } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NavBar from '@/components/navBar';
-import { Profile, medicine, groupedMedsByHours, groupedMedsByDays, day, sampleMedicine, appointment, groupedAppointmentsByDate } from 'types';
+import { Profile, medicine, groupedMedsByHours, groupedMedsByDays, day, sampleMedicine, appointment, groupedAppointmentsByDate, medicineTime } from 'types';
 import DayScheduleBullet from '@/components/dayScheduleBullet';
 import Button from '@/components/button';
 import LightButton from '@/components/lightButton';
@@ -37,6 +37,7 @@ export default function Home() {
   const [profileArray, setProfileArray] = useState<Profile[]>([]);
   const [currentPage, setCurrentPage] = useState(0);
   const [currentDate, setCurrentDate] = useState(Date.now());
+  const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
 
   // Modal States
   const [isMedInfoModalOpen, setIsMedInfoModalOpen] = useState(false);
@@ -64,49 +65,50 @@ export default function Home() {
   // 5. Derived State (useMemo)
   // ----------------------------------------------------------------------
   const selectedProfile = useMemo(() => {
-    return profileArray.find((profile: Profile) => profile.isSelected);
-  }, [profileArray]);
+    return profileArray.find((profile: Profile) => profile.id === selectedProfileId);
+  }, [profileArray, selectedProfileId]);
 
-  const hours: groupedMedsByHours[] = useMemo(() => {
-
-    if (isLoading || !selectedProfile || !selectedProfile.medicineSchedule) {
+  const hours = useMemo<groupedMedsByHours[]>(() => {
+    // 1. Guard Clause with optional chaining
+    if (isLoading || !selectedProfile?.medicineSchedule) {
       console.log("No medicine schedule");
       return [];
     }
-    const currentDayAbbreviation = dayAbbreviationMap[new Date(currentDate).getDay()];
-    const todaysMedicines = selectedProfile.medicineSchedule.filter((medicine: medicine) =>
-      medicine.days.includes(currentDayAbbreviation)
+    const currentDayAbbreviation = dayAbbreviationMap[new Date(currentDate).getDay()] as day;
+    const targetProfile = profileArray.find((p: Profile) => p.id === selectedProfileId);
+
+    if (!targetProfile) return [];
+
+    const todaysMedicines: medicine[] = targetProfile.medicineSchedule.filter((med: medicine) =>
+      med.days.includes(currentDayAbbreviation)
     );
-    // Get all unique hours from today's medicines
-    const allTimes = todaysMedicines.flatMap((medicine: medicine) => medicine.times);
-    // Deduplicate by time string
-    const uniqueTimeStrings = [...new Set(allTimes.map(t => t.time))];
-    // Sort unique hours chronologically
+
+    // 4. Extract unique time strings (e.g., "08:00")
+    const allTimes: medicineTime[] = todaysMedicines.flatMap((med: medicine) => med.times);
+    const uniqueTimeStrings: string[] = [...new Set(allTimes.map(t => t.time))];
+
+    // 5. Sort times (HH:mm format)
     const sortedTimeStrings = uniqueTimeStrings.sort((a, b) => {
-      const [hoursA, minutesA] = a.split(':').map(Number);
-      const [hoursB, minutesB] = b.split(':').map(Number);
-      const totalMinutesA = hoursA * 60 + minutesA;
-      const totalMinutesB = hoursB * 60 + minutesB;
-      return totalMinutesA - totalMinutesB;
-    });
-    // Group medicines by hour string
-    const groupedHours = sortedTimeStrings.map((timeStr: string) => {
-      return {
-        hour: timeStr,
-        medicines: todaysMedicines.filter((medicine: medicine) =>
-          medicine.times.some(t => t.time === timeStr)
-        )
-      };
+      const [hA, mA] = a.split(':').map(Number);
+      const [hB, mB] = b.split(':').map(Number);
+      return (hA * 60 + mA) - (hB * 60 + mB);
     });
 
-    return groupedHours;
-  }, [selectedProfile, currentDate]);
+    // 6. Return the strictly typed grouped array
+    return sortedTimeStrings.map((timeStr: string): groupedMedsByHours => ({
+      hour: timeStr,
+      medicines: todaysMedicines.filter((med: medicine) =>
+        med.times.some((t: medicineTime) => t.time === timeStr)
+      )
+    }));
+  }, [selectedProfile, currentDate, profileArray, selectedProfileId, isLoading]);
 
   const days: groupedMedsByDays[] = useMemo(() => {
-    if (!selectedProfile?.medicineSchedule) return [];
+    const targetProfile = profileArray.find((p: Profile) => p.id === selectedProfileId);
+    if (!targetProfile?.medicineSchedule) return [];
 
     // Get all unique days from all medicines
-    const daysArray = selectedProfile.medicineSchedule.flatMap((medicine: medicine) => medicine.days);
+    const daysArray = targetProfile.medicineSchedule.flatMap((medicine: medicine) => medicine.days);
     const uniqueDays = [...new Set(daysArray)];
 
     // Sort days in week order
@@ -116,22 +118,19 @@ export default function Home() {
     });
 
     // Group medicines by day
-    const groupedDays = sortedDays.map((day: day) => {
-      return {
-        day: day,
-        medicines: selectedProfile.medicineSchedule.filter((medicine: medicine) =>
-          medicine.days.includes(day)
-        )
-      };
-    });
-
-    return groupedDays;
-  }, [selectedProfile, currentDate, isLoading]);
+    return sortedDays.map((day: day) => ({
+      day: day,
+      medicines: (targetProfile.medicineSchedule).filter((medicine: medicine) =>
+        medicine.days.includes(day)
+      )
+    }));
+  }, [profileArray, selectedProfileId]);
 
   const groupedAppointments: groupedAppointmentsByDate[] = useMemo(() => {
-    if (!selectedProfile?.appointments) return [];
+    const targetProfile = profileArray.find((p: Profile) => p.id === selectedProfileId);
+    if (!targetProfile?.appointments) return [];
 
-    const grouped = selectedProfile.appointments.reduce((acc: { [key: number]: appointment[] }, app) => {
+    const grouped = targetProfile.appointments.reduce((acc: { [key: number]: appointment[] }, app) => {
       const date = new Date(app.date);
       date.setHours(0, 0, 0, 0);
       const timestamp = date.getTime();
@@ -149,7 +148,7 @@ export default function Home() {
         appointments: appointments.sort((a, b) => a.time.localeCompare(b.time))
       }))
       .sort((a, b) => a.date - b.date);
-  }, [selectedProfile]);
+  }, [profileArray, selectedProfileId]);
 
   // ----------------------------------------------------------------------
   // 6. Effects
@@ -164,6 +163,7 @@ export default function Home() {
           if (storedProfiles && storedProfiles.length > 0) {
             console.log("Profiles fetched successfully [index.tsx]");
             setProfileArray(JSON.parse(storedProfiles));
+            setSelectedProfileId(JSON.parse(storedProfiles).find((profile: Profile) => profile.isSelected)?.id);
           } else {
             router.replace('/createProfile');
           }
@@ -263,12 +263,10 @@ export default function Home() {
     }
   }
 
-  const selectProfile = async (profile: Profile) => {
+  const selectProfile = async (profileId: string) => {
     try {
-      const updatedProfileArray = profileArray.map((p: Profile) => profile.id === p.id ? { ...p, isSelected: true } : { ...p, isSelected: false });
-      setProfileArray(updatedProfileArray);
-      await saveProfileArray(updatedProfileArray);
-      console.log("Profile selected " + updatedProfileArray.find((p: Profile) => p.isSelected)?.name);
+      setSelectedProfileId(profileId);
+      console.log("Profile selected " + profileArray.find((p: Profile) => p.id === profileId)?.name);
     } catch (e) {
       console.error("Failed to select profile [index.tsx]", e);
     }

@@ -59,7 +59,7 @@ export default function NavBar({ profileArray, selectProfile, deleteProfile }: {
                                 <Pressable
                                     key={index}
                                     onPress={async () => {
-                                        await selectProfile(profile);
+                                        await selectProfile(profile.id);
                                         setProfileDropdown(false);
                                     }}
                                     className="px-5 py-2 border-b border-pink-100 active:bg-pink-50"

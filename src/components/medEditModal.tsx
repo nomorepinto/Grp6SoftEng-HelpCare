@@ -23,6 +23,7 @@ export default function MedEditModal({
   const [name, setName] = useState('');
   const [quantity, setQuantity] = useState('');
   const [amountRemaining, setAmountRemaining] = useState('');
+  const [amountTaken, setAmountTaken] = useState('');
   const [times, setTimes] = useState<string[]>([]);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [days, setDays] = useState<day[]>([]);
@@ -38,6 +39,7 @@ export default function MedEditModal({
       setName(medData.name);
       setQuantity(medData.totalQuantity.toString());
       setAmountRemaining(medData.amountRemaining.toString());
+      setAmountTaken(medData.amountTaken.toString());
       setTimes(medData.times.map(t => t.time));
       setDays(medData.days);
       setColor(medData.color);
@@ -71,6 +73,7 @@ export default function MedEditModal({
         name,
         totalQuantity: parseInt(quantity) || 0,
         amountRemaining: parseInt(amountRemaining) || 0,
+        amountTaken: parseInt(amountTaken) || 0,
         times: times.map(t => ({ time: t, isTaken: false })),
         days,
         color,
@@ -128,6 +131,18 @@ export default function MedEditModal({
                 placeholder="Remaining"
                 onChangeText={setAmountRemaining}
                 value={amountRemaining}
+                isNumeric
+              />
+            </View>
+            <View className="mb-4" />
+
+            <View className="w-full">
+              <Text className="text-gray-700 font-semibold mb-1">Amount Taken</Text>
+              <TextBox
+                width="w-full"
+                placeholder="Taken"
+                onChangeText={setAmountTaken}
+                value={amountTaken}
                 isNumeric
               />
             </View>
