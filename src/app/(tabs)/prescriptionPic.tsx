@@ -59,25 +59,29 @@ export default function PrescriptionPic() {
         }
     }
 
-    async function uploadPhotos(photo: any) {
+    async function uploadPhotos(photos: any[]) {
         setIsLoading(true);
         try {
-            const arrayOfMedicine: medicine[] = await askGemini(photo.base64) ?? [];
+            let arrayOfMedicine: medicine[] = [];
+            for (const photo of photos) {
+                arrayOfMedicine = [...arrayOfMedicine, ...(await askGemini(photo.base64) ?? [])];
+            }
             for (const med of arrayOfMedicine) {
                 if (med.name !== "not a prescription") {
                     await saveMedicineToProfile(med);
                 } else {
                     setWarningText("The image does not appear to be a prescription.");
                     setWarningModalVisible(true);
+                    throw new Error("The image does not appear to be a prescription.");
                 }
             }
+            router.replace("/medStock");
         } catch (error) {
             setWarningText("Failed to upload photos.");
             setWarningModalVisible(true);
             console.error("Error uploading photos:", error);
         } finally {
             setIsLoading(false);
-            router.replace("/medStock");
         }
     }
 
@@ -162,7 +166,7 @@ export default function PrescriptionPic() {
                     <Button placeholder="Upload Photos"
                         onPress={async () => {
                             if (photos.length > 0) {
-                                await Promise.all(photos.map((photo: any) => uploadPhotos(photo)));
+                                await uploadPhotos(photos);
                             } else {
                                 setWarningText("No photos taken yet");
                                 setWarningModalVisible(true);
