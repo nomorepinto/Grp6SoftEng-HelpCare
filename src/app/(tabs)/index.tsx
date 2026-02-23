@@ -38,6 +38,7 @@ export default function Home() {
   const [currentPage, setCurrentPage] = useState(0);
   const [currentDate, setCurrentDate] = useState(Date.now());
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
+  const [isDoctorArray, setIsDoctorArray] = useState<boolean>(false);
 
   // Modal States
   const [isMedInfoModalOpen, setIsMedInfoModalOpen] = useState(false);
@@ -177,6 +178,24 @@ export default function Home() {
     }, [])
   );
 
+  useFocusEffect(
+    useCallback(() => {
+      const fetchDoctors = async () => {
+        try {
+          const storedDoctors = await AsyncStorage.getItem('doctors');
+          if (storedDoctors && storedDoctors.length > 0) {
+            console.log("Doctors fetched successfully [index.tsx]");
+            setIsDoctorArray(true);
+          } else {
+            setIsDoctorArray(false);
+          }
+        } catch (e) {
+          console.error("Failed to fetch doctors [index.tsx]", e);
+        }
+      };
+      fetchDoctors();
+    }, [])
+  );
 
   // Date Check Interval
   useEffect(() => {
@@ -444,7 +463,8 @@ export default function Home() {
                       ))}
                     </ScrollView>
                   </View>
-                  <Button placeholder="Add Appointment" onPress={() => router.push('/addAppointment')} width='w-[90%]' />
+                  <Button placeholder="Add Doctor" onPress={() => router.push('/addDoctor')} width='w-[90%]' />
+                  <Button placeholder="Add Appointment" onPress={() => isDoctorArray ? router.push('/addAppointment') : router.push('/addDoctor')} width='w-[90%]' />
                 </View>
 
               </PagerView>

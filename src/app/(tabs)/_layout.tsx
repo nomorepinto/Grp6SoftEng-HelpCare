@@ -13,6 +13,7 @@ export default function TabLayout() {
             <Tabs.Screen name="inputMedicine" />
             <Tabs.Screen name="prescriptionPic" />
             <Tabs.Screen name="addAppointment" />
+            <Tabs.Screen name="addDoctor" />
             <Tabs.Screen name="medStock" />
             <Tabs.Screen name="createProfile" />
         </Tabs>

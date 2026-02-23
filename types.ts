@@ -13,28 +13,18 @@ export const sampleMedicine: medicine = {
 
 };
 
-/* proposed
-
 export type doctor = {
     id: string;
     name: string;
     specialization: string;
+    secretary: string;
     color: string;
+    daysAvailable: day[];
 }
 
 export type appointment = {
     id: string;
-    doctorName: doctor;
-    date: number;
-    time: string;
-}
-
-*/
-
-//current
-export type appointment = {
-    id: string;
-    doctorName: string;
+    doctor: doctor;
     date: number;
     time: string;
 }
