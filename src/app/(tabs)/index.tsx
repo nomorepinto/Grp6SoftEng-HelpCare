@@ -450,7 +450,7 @@ export default function Home() {
                       theme={pinkCalendarTheme}
                     />
                   </View>
-                  <View className="max-h-[40%]">
+                  <View className="max-h-[35%]">
                     <ScrollView className="flex-grow-0">
                       {groupedAppointments.map((group, index) => (
                         <AppointmentBullet

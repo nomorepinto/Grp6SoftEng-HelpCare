@@ -87,78 +87,80 @@ export default function AddDoctor() {
     }, [warningModalVisible]);
 
     return (
-        <Animated.View className="flex-1 items-center justify-center bg-white" style={animatedStyle}>
-            <View className="flex-1 justify-center items-center w-5/6 mx-auto pt-26">
-                <Text className="text-pink-500 text-3xl font-Milliard-ExtraBold mb-8 text-center">
-                    Add Doctor
-                </Text>
+        <Animated.View className="flex-1 bg-white" style={animatedStyle}>
+            <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <View className="flex-1 justify-center items-center w-5/6 mx-auto py-20">
+                    <Text className="text-pink-500 text-3xl font-Milliard-ExtraBold mb-8 text-center">
+                        Add Doctor
+                    </Text>
 
-                <View className="w-full gap-4">
-                    <View className="flex flex-col">
-                        <Text className="text-pink-500 text-xl font-Milliard-Heavy mb-2">Doctor's Name</Text>
-                        <TextBox
-                            placeholder="Doctor Name"
-                            value={doctorName}
-                            onChangeText={setDoctorName}
-                            width="w-full"
-                        />
+                    <View className="w-full gap-4">
+                        <View className="flex flex-col">
+                            <Text className="text-pink-500 text-xl font-Milliard-Heavy mb-2">Doctor's Name</Text>
+                            <TextBox
+                                placeholder="Doctor Name"
+                                value={doctorName}
+                                onChangeText={setDoctorName}
+                                width="w-full"
+                            />
+                        </View>
+                        <View className="flex flex-col">
+                            <Text className="text-pink-500 text-xl font-Milliard-Heavy mb-2">Specialty</Text>
+                            <TextBox
+                                placeholder="Specialty"
+                                value={specialty}
+                                onChangeText={setSpecialty}
+                                width="w-full"
+                            />
+                        </View>
+                        <View className="flex flex-col">
+                            <Text className="text-pink-500 text-xl font-Milliard-Heavy mb-2">Secretary</Text>
+                            <TextBox
+                                placeholder="Secretary"
+                                value={secretary}
+                                onChangeText={setSecretary}
+                                width="w-full"
+                            />
+                        </View>
                     </View>
-                    <View className="flex flex-col">
-                        <Text className="text-pink-500 text-xl font-Milliard-Heavy mb-2">Specialty</Text>
-                        <TextBox
-                            placeholder="Specialty"
-                            value={specialty}
-                            onChangeText={setSpecialty}
-                            width="w-full"
-                        />
+
+                    <View className="w-full mt-6">
+                        <Text className="text-pink-500 text-xl font-Milliard-Heavy mb-2">Days Available</Text>
+                        <View className="flex flex-row justify-between w-full">
+                            {DAYS.map((day) => (
+                                <TouchableOpacity
+                                    key={day}
+                                    onPress={() => toggleDay(day)}
+                                    className={`px-3 py-2 rounded-xl border border-pink-600 ${selectedDays.includes(day)
+                                        ? 'bg-pink-500'
+                                        : 'bg-pink-100'
+                                        }`}
+                                >
+                                    <Text className={`font-Milliard-Medium ${selectedDays.includes(day)
+                                        ? 'text-white'
+                                        : 'text-pink-500'
+                                        }`}>
+                                        {day}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
                     </View>
-                    <View className="flex flex-col">
-                        <Text className="text-pink-500 text-xl font-Milliard-Heavy mb-2">Secretary</Text>
-                        <TextBox
-                            placeholder="Secretary"
-                            value={secretary}
-                            onChangeText={setSecretary}
-                            width="w-full"
+
+                    <View className="flex flex-row w-full justify-center gap-2 mt-12 mb-10">
+                        <Button
+                            placeholder="Cancel"
+                            onPress={() => router.back()}
+                            width="w-[48%]"
+                        />
+                        <Button
+                            placeholder="Confirm"
+                            onPress={addDoctor}
+                            width="w-[48%]"
                         />
                     </View>
                 </View>
-
-                <View className="w-full mt-6">
-                    <Text className="text-pink-500 text-xl font-Milliard-Heavy mb-2">Days Available</Text>
-                    <View className="flex flex-row justify-between w-full">
-                        {DAYS.map((day) => (
-                            <TouchableOpacity
-                                key={day}
-                                onPress={() => toggleDay(day)}
-                                className={`px-3 py-2 rounded-xl border border-pink-600 ${selectedDays.includes(day)
-                                    ? 'bg-pink-500'
-                                    : 'bg-pink-100'
-                                    }`}
-                            >
-                                <Text className={`font-Milliard-Medium ${selectedDays.includes(day)
-                                    ? 'text-white'
-                                    : 'text-pink-500'
-                                    }`}>
-                                    {day}
-                                </Text>
-                            </TouchableOpacity>
-                        ))}
-                    </View>
-                </View>
-
-                <View className="flex flex-row w-full justify-center gap-2 mt-12 mb-10">
-                    <Button
-                        placeholder="Cancel"
-                        onPress={() => router.back()}
-                        width="w-[48%]"
-                    />
-                    <Button
-                        placeholder="Confirm"
-                        onPress={addDoctor}
-                        width="w-[48%]"
-                    />
-                </View>
-            </View>
+            </ScrollView>
             <WarningModal
                 isOpen={warningModalVisible}
                 onClose={() => setWarningModalVisible(false)}

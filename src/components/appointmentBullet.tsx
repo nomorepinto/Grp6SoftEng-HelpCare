@@ -23,6 +23,7 @@ export default function AppointmentBullet({ dayAppointments, onPress }: Appointm
                     <AppointmentSubBullet
                         key={index}
                         appointment={appointment}
+                        color={appointment.doctor.color}
                         onPress={() => onPress?.(appointment)}
                     />
                 ))}

@@ -73,22 +73,26 @@ export default function CreateProfile() {
     };
 
     return (
-        <Animated.View className="flex-1 items-center justify-center bg-white" style={animatedStyle}>
-            <Text className="text-pink-500 text-3xl font-Milliard-ExtraBold mb-3">Create Profile</Text>
-            <View className="flex flex-col w-5/6 gap-3">
-                <View className="flex flex-col">
-                    <TextBox width="w-full" placeholder="Patient Name" onChangeText={setPatientName} value={patientName} />
+        <Animated.View className="flex-1 bg-white" style={animatedStyle}>
+            <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <View className="w-5/6 items-center justify-center py-20">
+                    <Text className="text-pink-500 text-3xl font-Milliard-ExtraBold mb-3">Create Profile</Text>
+                    <View className="flex flex-col w-full gap-3">
+                        <View className="flex flex-col">
+                            <TextBox width="w-full" placeholder="Patient Name" onChangeText={setPatientName} value={patientName} />
+                        </View>
+                        <View className="flex flex-col">
+                            <TextBox width="w-full" placeholder="Age" onChangeText={setAge} value={age} isNumeric />
+                        </View>
+                        <View className="flex flex-col">
+                            <TextBox width="w-full" placeholder="Affliction" onChangeText={setAffliction} value={affliction} />
+                        </View>
+                        <View className="flex flex-row justify-end">
+                            <Button placeholder="Next" onPress={() => saveProfile()} width="w-1/2" />
+                        </View>
+                    </View>
                 </View>
-                <View className="flex flex-col">
-                    <TextBox width="w-full" placeholder="Age" onChangeText={setAge} value={age} isNumeric />
-                </View>
-                <View className="flex flex-col">
-                    <TextBox width="w-full" placeholder="Affliction" onChangeText={setAffliction} value={affliction} />
-                </View>
-                <View className="flex flex-row justify-end">
-                    <Button placeholder="Next" onPress={() => saveProfile()} width="w-1/2" />
-                </View>
-            </View>
+            </ScrollView>
             <WarningModal header='Warning' isOpen={warningModalVisible} onClose={() => setWarningModalVisible(false)} text="Please fill in all fields" />
         </Animated.View>
     );

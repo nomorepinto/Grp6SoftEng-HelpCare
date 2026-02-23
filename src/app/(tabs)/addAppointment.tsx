@@ -13,6 +13,9 @@ import { format24to12 } from '@/components/functions/timeUtils';
 import { Calendar } from '@marceloterreiro/flash-calendar';
 import { pinkCalendarTheme } from '@/components/themes/pinkCalendarTheme';
 import DoctorSelector from '@/components/doctorSelector';
+import type { day } from 'types';
+
+const DAYS: day[] = ["M", "T", "W", "Th", "F", "S", "Su"];
 
 export default function AddAppointment() {
     const router = useRouter();
@@ -145,88 +148,109 @@ export default function AddAppointment() {
     }
 
     return (
-        <Animated.View className="flex-1 items-center justify-center bg-white" style={animatedStyle}>
-            <View className="w-5/6 items-center justify-center">
-                <Text className="text-pink-500 text-3xl font-Milliard-ExtraBold mb-5">Add Appointment</Text>
+        <Animated.View className="flex-1 bg-white" style={animatedStyle}>
+            <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center' }}>
+                <View className="w-5/6 items-center justify-center py-10">
+                    <Text className="text-pink-500 text-3xl font-Milliard-ExtraBold mb-5">Add Appointment</Text>
 
-                <View className="flex flex-col gap-3 w-full">
-                    <View className="flex flex-col">
-                        <Text className="text-pink-500 text-xl font-Milliard-Heavy mb-2">Doctor's Name</Text>
-                        <TouchableOpacity
-                            onPress={() => setDoctorSelectorVisible(true)}
-                            className="border border-gray-500 rounded-3xl p-5 mb-2 bg-white"
-                        >
-                            <Text className="text-gray-700 text-center font-Milliard-ExtraBold mb-5 text-xl rounded-full border border-gray-300 p-2">
-                                {doctorArray.find((doctor: doctor) => doctor.id === selectedDoctorId)?.name || "Select Doctor"}
-                            </Text>
-                        </TouchableOpacity>
-                    </View>
+                    <View className="flex flex-col gap-3 w-full">
+                        <View className="flex flex-col">
+                            <Text className="text-pink-500 text-xl font-Milliard-Heavy mb-2">Doctor</Text>
+                            <TouchableOpacity
+                                onPress={() => setDoctorSelectorVisible(true)}
+                                className="border border-gray-500 rounded-3xl p-2 mb-2 bg-white"
+                            >
+                                <Text className="text-pink-500 text-center font-Milliard-ExtraBold text-2xl rounded-full p-2">
+                                    {doctorArray.find((doctor: doctor) => doctor.id === selectedDoctorId)?.name || "Select Doctor"}
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
 
-                    <View className="flex flex-col mt-3">
-                        <Text className="text-pink-500 text-xl font-Milliard-Heavy mb-2">Select Date</Text>
-                        <View className="border border-gray-500 rounded-3xl p-5 mb-2 bg-white">
-                            <Text className="text-gray-700 text-center font-Milliard-ExtraBold mb-5 text-xl rounded-full border border-gray-300 p-2">{dateString}</Text>
-                            <Calendar
-                                calendarMonthId={new Date(selectedDate).toISOString().split('T')[0].substring(0, 7) + '-01'}
-                                onCalendarDayPress={(dateId) => {
-                                    setSelectedDate(new Date(dateId).getTime());
-                                }}
-                                calendarActiveDateRanges={[
-                                    {
-                                        startId: new Date(selectedDate).toISOString().split('T')[0],
-                                        endId: new Date(selectedDate).toISOString().split('T')[0],
-                                    }
-                                ].concat(selectedProfile?.appointments.map((appointment: appointment) => ({
-                                    startId: new Date(appointment.date).toISOString().split('T')[0],
-                                    endId: new Date(appointment.date).toISOString().split('T')[0]
-                                })) || [])}
-                                theme={pinkCalendarTheme}
+                        <View className="flex flex-col mt-3">
+                            <Text className="text-pink-500 text-xl font-Milliard-Heavy mb-2">Select Date</Text>
+                            <View className="border border-gray-500 rounded-3xl p-5 mb-2 bg-white h-96">
+                                <Text className="text-gray-700 text-center font-Milliard-ExtraBold mb-5 text-xl rounded-full border border-gray-300 p-2">{dateString}</Text>
+                                <Calendar.List
+                                    calendarInitialMonthId={`${new Date(selectedDate).getFullYear()}-${String(new Date(selectedDate).getMonth() + 1).padStart(2, '0')}-01`}
+                                    onCalendarDayPress={(dateId) => {
+                                        if (new Date(dateId) < new Date()) {
+                                            setWarningText("You cannot select a past date");
+                                            setWarningModalVisible(true);
+                                            return;
+                                        }
+                                        if (!selectedDoctorId) {
+                                            setWarningText("Please select a doctor");
+                                            setWarningModalVisible(true);
+                                            return;
+                                        }
 
+                                        /*
+                                        doesnt work
+                                        if (!doctorArray.find((doctor: doctor) => doctor.id === selectedDoctorId)?.daysAvailable.includes(DAYS[new Date(dateId).getDay()])) {
+                                            setWarningText("The selected doctor is not available on the selected date");
+                                            setWarningModalVisible(true);
+                                            return;
+                                        }
+                                        */
+                                        setSelectedDate(new Date(dateId).getTime());
+                                    }}
+                                    calendarActiveDateRanges={[
+                                        {
+                                            startId: new Date(selectedDate).toISOString().split('T')[0],
+                                            endId: new Date(selectedDate).toISOString().split('T')[0],
+                                        }
+                                    ].concat(selectedProfile?.appointments.map((appointment: appointment) => ({
+                                        startId: new Date(appointment.date).toISOString().split('T')[0],
+                                        endId: new Date(appointment.date).toISOString().split('T')[0]
+                                    })) || [])}
+                                    theme={pinkCalendarTheme}
+
+                                />
+                            </View>
+                        </View>
+
+                        <View className="flex flex-col mt-3">
+                            <Text className="text-pink-500 text-xl font-Milliard-Heavy mb-2">Time</Text>
+                            <TouchableOpacity
+                                onPress={() => setShowTimePicker(true)}
+                                className="w-full border border-gray-500 rounded-3xl p-4 bg-white items-center"
+                            >
+                                <Text className="text-pink-500 text-2xl font-Milliard-ExtraBold">
+                                    {time ? format24to12(time) : "Select Time"}
+                                </Text>
+                            </TouchableOpacity>
+
+                            <DateTimePickerModal
+                                isVisible={showTimePicker}
+                                mode="time"
+                                display="spinner"
+                                minuteInterval={5}
+                                onConfirm={handleConfirmTime}
+                                onCancel={() => setShowTimePicker(false)}
                             />
+                        </View>
+
+                        <View className="flex flex-row justify-between mt-10 mb-10">
+                            <Button placeholder="Cancel" onPress={handleCancel} width="w-[48%]" />
+                            <Button placeholder="Save" onPress={saveAppointment} width="w-[48%]" />
                         </View>
                     </View>
 
-                    <View className="flex flex-col mt-3">
-                        <Text className="text-pink-500 text-xl font-Milliard-Heavy mb-2">Time</Text>
-                        <TouchableOpacity
-                            onPress={() => setShowTimePicker(true)}
-                            className="w-full border border-gray-500 rounded-3xl p-4 bg-white items-center"
-                        >
-                            <Text className="text-pink-500 text-2xl font-Milliard-ExtraBold">
-                                {time ? format24to12(time) : "Select Time"}
-                            </Text>
-                        </TouchableOpacity>
+                    <DoctorSelector
+                        doctors={doctorArray}
+                        selectDoctor={(doctor) => setSelectedDoctorId(doctor.id)}
+                        isOpen={doctorSelectorVisible}
+                        onClose={() => setDoctorSelectorVisible(false)}
+                    />
 
-                        <DateTimePickerModal
-                            isVisible={showTimePicker}
-                            mode="time"
-                            display="spinner"
-                            minuteInterval={5}
-                            onConfirm={handleConfirmTime}
-                            onCancel={() => setShowTimePicker(false)}
-                        />
-                    </View>
-
-                    <View className="flex flex-row justify-between mt-10 mb-10">
-                        <Button placeholder="Cancel" onPress={handleCancel} width="w-[48%]" />
-                        <Button placeholder="Save" onPress={saveAppointment} width="w-[48%]" />
-                    </View>
+                    <WarningModal
+                        header="Warning"
+                        isOpen={warningModalVisible}
+                        onClose={() => setWarningModalVisible(false)}
+                        text={warningText}
+                    />
                 </View>
-
-                <DoctorSelector
-                    doctors={doctorArray}
-                    selectDoctor={(doctor) => setSelectedDoctorId(doctor.id)}
-                    isOpen={doctorSelectorVisible}
-                    onClose={() => setDoctorSelectorVisible(false)}
-                />
-
-                <WarningModal
-                    header="Warning"
-                    isOpen={warningModalVisible}
-                    onClose={() => setWarningModalVisible(false)}
-                    text={warningText}
-                />
-            </View>
+            </ScrollView>
         </Animated.View>
     );
 }
