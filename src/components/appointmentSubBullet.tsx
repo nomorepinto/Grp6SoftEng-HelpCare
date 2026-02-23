@@ -5,13 +5,12 @@ import { format24to12 } from "./functions/timeUtils";
 interface AppointmentSubBulletProps {
     appointment: appointment;
     color?: string;
-    onPress?: () => void;
+    onDelete?: () => void;
 }
 
-export default function AppointmentSubBullet({ appointment, color, onPress }: AppointmentSubBulletProps) {
+export default function AppointmentSubBullet({ appointment, color, onDelete }: AppointmentSubBulletProps) {
     return (
-        <Pressable className={`flex flex-row w-full ${color} rounded-3xl px-5 py-2 active:opacity-55`}
-            onPress={onPress}>
+        <View className={`flex flex-row w-full ${color} rounded-3xl px-5 py-2`}>
             <View className="flex flex-col w-full">
                 <View className="flex flex-row justify-between items-center w-full">
                     <Text className="text-gray-700 font-Milliard-Medium text-xl">{appointment.doctor.name}</Text>
@@ -27,8 +26,17 @@ export default function AppointmentSubBullet({ appointment, color, onPress }: Ap
                     <Text className="w-full text-gray-700 font-Milliard-Medium bg-white/70 px-5 py-1 rounded-full text-sm">
                         Secretary: {appointment.doctor.secretary}
                     </Text>
+                    <Pressable
+                        onPress={onDelete}
+                        className="self-start rounded-full py-1 px-4 w-[48%] active:bg-slate-300 bg-red-400"
+                    >
+                        <Text className="font-Milliard-Medium text-center text-white">
+                            Delete
+                        </Text>
+                    </Pressable>
+
                 </View>
             </View>
-        </Pressable>
+        </View>
     );
 }

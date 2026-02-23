@@ -4,10 +4,10 @@ import AppointmentSubBullet from "./appointmentSubBullet";
 
 interface AppointmentBulletProps {
     dayAppointments: groupedAppointmentsByDate;
-    onPress?: (appointment: appointment) => void;
+    onDelete: any;
 }
 
-export default function AppointmentBullet({ dayAppointments, onPress }: AppointmentBulletProps) {
+export default function AppointmentBullet({ dayAppointments, onDelete }: AppointmentBulletProps) {
     const date = new Date(dayAppointments.date);
     const formattedDate = date.toLocaleDateString('en-US', {
         weekday: 'long',
@@ -24,7 +24,7 @@ export default function AppointmentBullet({ dayAppointments, onPress }: Appointm
                         key={index}
                         appointment={appointment}
                         color={appointment.doctor.color}
-                        onPress={() => onPress?.(appointment)}
+                        onDelete={onDelete}
                     />
                 ))}
             </View>

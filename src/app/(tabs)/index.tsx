@@ -43,6 +43,7 @@ export default function Home() {
   // Modal States
   const [isMedInfoModalOpen, setIsMedInfoModalOpen] = useState(false);
   const [isWarningModalOpen, setIsWarningModalOpen] = useState(false);
+  const [warningModalText, setWarningModalText] = useState("");
   const [isHowManyTakenModalOpen, setIsHowManyTakenModalOpen] = useState(false);
 
   // Selection States
@@ -294,10 +295,12 @@ export default function Home() {
   const deleteProfile = async (profile: Profile) => {
     try {
       if (profileArray.length === 1) {
+        setWarningModalText("Cannot Delete Current Profile, Please Select Another Profile Before Deleting.");
         setIsWarningModalOpen(true);
         return;
       }
       if (profile.isSelected) {
+        setWarningModalText("Cannot Delete Current Profile, Please Select Another Profile Before Deleting.");
         setIsWarningModalOpen(true);
         return;
       }
@@ -454,17 +457,22 @@ export default function Home() {
                     <ScrollView className="flex-grow-0">
                       {groupedAppointments.map((group, index) => (
                         <AppointmentBullet
+                          onDelete={() => { }}
                           key={index}
                           dayAppointments={group}
-                          onPress={(app) => {
-                            console.log("Appointment pressed", app);
-                          }}
                         />
                       ))}
                     </ScrollView>
                   </View>
-                  <Button placeholder="Add Doctor" onPress={() => router.push('/addDoctor')} width='w-[90%]' />
-                  <Button placeholder="Add Appointment" onPress={() => isDoctorArray ? router.push('/addAppointment') : router.push('/addDoctor')} width='w-[90%]' />
+                  <Button placeholder="Doctors Tab" onPress={() => router.push('/doctorFiles')} width='w-[90%]' />
+                  <Button placeholder="Add Appointment" onPress={() => {
+                    if (isDoctorArray) {
+                      router.push('/addAppointment');
+                    } else {
+                      setWarningModalText("Please Add a Doctor First");
+                      setIsWarningModalOpen(true);
+                    }
+                  }} width='w-[90%]' />
                 </View>
 
               </PagerView>
@@ -472,7 +480,7 @@ export default function Home() {
           )
 
         }
-        <WarningModal isOpen={isWarningModalOpen} onClose={() => setIsWarningModalOpen(false)} header="Warning" text="Cannot Deleted Current Profile, Please Select Another Profile Before Deleting." />
+        <WarningModal isOpen={isWarningModalOpen} onClose={() => setIsWarningModalOpen(false)} header="Warning" text={warningModalText} />
         <MedInfoModal isOpen={isMedInfoModalOpen} onClose={() => setIsMedInfoModalOpen(false)} medicine={selectedMed ?? sampleMedicine} />
         <HowManyTakenModal isOpen={isHowManyTakenModalOpen} onClose={() => setIsHowManyTakenModalOpen(false)} selectedHour={selectedHour ?? { hour: "", medicines: [] }} selectedMedicineID={selectedMedicineID ?? ""} takeMedicine={takeMedicine} />
       </View>
