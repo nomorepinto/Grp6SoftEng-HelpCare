@@ -13,6 +13,7 @@ import { format24to12 } from '@/components/functions/timeUtils';
 import { Calendar } from '@marceloterreiro/flash-calendar';
 import { pinkCalendarTheme } from '@/components/themes/pinkCalendarTheme';
 import DoctorSelector from '@/components/doctorSelector';
+import CalendarModal from '@/components/calendarModal';
 import type { day } from 'types';
 
 const DAYS: day[] = ["M", "T", "W", "Th", "F", "S", "Su"];
@@ -28,6 +29,7 @@ export default function AddAppointment() {
     const [profileArray, setProfileArray] = useState<Profile[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [doctorSelectorVisible, setDoctorSelectorVisible] = useState(false);
+    const [calendarModalVisible, setCalendarModalVisible] = useState(false);
     const [doctorArray, setDoctorArray] = useState<doctor[]>([]);
 
     useFocusEffect(
@@ -69,12 +71,12 @@ export default function AddAppointment() {
 
 
     useEffect(() => {
-        if (warningModalVisible || showTimePicker) {
+        if (warningModalVisible || showTimePicker || doctorSelectorVisible || calendarModalVisible) {
             opacity.value = withTiming(0.25);
         } else {
             opacity.value = withTiming(1);
         }
-    }, [warningModalVisible, showTimePicker]);
+    }, [warningModalVisible, showTimePicker, doctorSelectorVisible, calendarModalVisible]);
 
     const saveAppointmentToProfile = async (newAppointment: appointment) => {
         try {
@@ -158,64 +160,33 @@ export default function AddAppointment() {
                             <Text className="text-pink-500 text-xl font-Milliard-Heavy mb-2">Doctor</Text>
                             <TouchableOpacity
                                 onPress={() => setDoctorSelectorVisible(true)}
-                                className="border border-gray-500 rounded-3xl p-2 mb-2 bg-white"
+                                className="border border-gray-500 rounded-3xl p-2 bg-white"
                             >
-                                <Text className="text-pink-500 text-center font-Milliard-ExtraBold text-2xl rounded-full p-2">
+                                <Text className="text-gray-700 text-center font-Milliard-ExtraBold text-2xl rounded-full p-2">
                                     {doctorArray.find((doctor: doctor) => doctor.id === selectedDoctorId)?.name || "Select Doctor"}
                                 </Text>
                             </TouchableOpacity>
                         </View>
 
-                        <View className="flex flex-col mt-3">
+                        <View className="flex flex-col">
                             <Text className="text-pink-500 text-xl font-Milliard-Heavy mb-2">Select Date</Text>
-                            <View className="border border-gray-500 rounded-3xl p-5 mb-2 bg-white h-96">
-                                <Text className="text-gray-700 text-center font-Milliard-ExtraBold mb-5 text-xl rounded-full border border-gray-300 p-2">{dateString}</Text>
-                                <Calendar.List
-                                    calendarInitialMonthId={`${new Date(selectedDate).getFullYear()}-${String(new Date(selectedDate).getMonth() + 1).padStart(2, '0')}-01`}
-                                    onCalendarDayPress={(dateId) => {
-                                        if (new Date(dateId) < new Date()) {
-                                            setWarningText("You cannot select a past date");
-                                            setWarningModalVisible(true);
-                                            return;
-                                        }
-                                        if (!selectedDoctorId) {
-                                            setWarningText("Please select a doctor");
-                                            setWarningModalVisible(true);
-                                            return;
-                                        }
-
-                                        /*
-                                        doesnt work
-                                        if (!doctorArray.find((doctor: doctor) => doctor.id === selectedDoctorId)?.daysAvailable.includes(DAYS[new Date(dateId).getDay()])) {
-                                            setWarningText("The selected doctor is not available on the selected date");
-                                            setWarningModalVisible(true);
-                                            return;
-                                        }
-                                        */
-                                        setSelectedDate(new Date(dateId).getTime());
-                                    }}
-                                    calendarActiveDateRanges={[
-                                        {
-                                            startId: new Date(selectedDate).toISOString().split('T')[0],
-                                            endId: new Date(selectedDate).toISOString().split('T')[0],
-                                        }
-                                    ].concat(selectedProfile?.appointments.map((appointment: appointment) => ({
-                                        startId: new Date(appointment.date).toISOString().split('T')[0],
-                                        endId: new Date(appointment.date).toISOString().split('T')[0]
-                                    })) || [])}
-                                    theme={pinkCalendarTheme}
-
-                                />
-                            </View>
+                            <TouchableOpacity
+                                onPress={() => setCalendarModalVisible(true)}
+                                className="border border-gray-500 rounded-3xl p-4 bg-white items-center"
+                            >
+                                <Text className="text-gray-700 text-2xl font-Milliard-ExtraBold">
+                                    {dateString}
+                                </Text>
+                            </TouchableOpacity>
                         </View>
 
-                        <View className="flex flex-col mt-3">
+                        <View className="flex flex-col">
                             <Text className="text-pink-500 text-xl font-Milliard-Heavy mb-2">Time</Text>
                             <TouchableOpacity
                                 onPress={() => setShowTimePicker(true)}
                                 className="w-full border border-gray-500 rounded-3xl p-4 bg-white items-center"
                             >
-                                <Text className="text-pink-500 text-2xl font-Milliard-ExtraBold">
+                                <Text className="text-gray-700 text-2xl font-Milliard-ExtraBold">
                                     {time ? format24to12(time) : "Select Time"}
                                 </Text>
                             </TouchableOpacity>
@@ -248,6 +219,19 @@ export default function AddAppointment() {
                         isOpen={warningModalVisible}
                         onClose={() => setWarningModalVisible(false)}
                         text={warningText}
+                    />
+
+                    <CalendarModal
+                        isOpen={calendarModalVisible}
+                        onClose={() => setCalendarModalVisible(false)}
+                        selectedDate={selectedDate}
+                        setSelectedDate={setSelectedDate}
+                        appointments={selectedProfile?.appointments || []}
+                        selectedDoctorId={selectedDoctorId}
+                        showWarning={(text) => {
+                            setWarningText(text);
+                            setWarningModalVisible(true);
+                        }}
                     />
                 </View>
             </ScrollView>

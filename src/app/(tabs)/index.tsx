@@ -219,39 +219,82 @@ export default function Home() {
   }, [currentDate]);
 
   // Notifications
-  useEffect(() => {
-    // Cancel all previous notifications for this profile
-    const scheduledIds: string[] = [];
 
+  const scheduleMedicineNotifications = useCallback(() => {
     hours.forEach((hour: groupedMedsByHours) => {
       hour.medicines.forEach((medicine: medicine) => {
         medicine.times.forEach((time: { time: string; isTaken: boolean }) => {
-          // Skip if already taken
           if (time.isTaken) return;
 
           const countdown = timeStringToCountdown(time.time);
+          if (countdown <= 0) return;
 
-          // Only schedule if countdown is positive (future time)
-          if (countdown > 0) {
-            const notificationId = `${medicine.id}-${time.time}`;
-            scheduleNotification(
-              "Take your medicine",
-              medicine.name,
-              { id: medicine.id, notificationId },
-              countdown
-            );
-            scheduledIds.push(notificationId);
-          }
+          const notificationId = `${medicine.id}-${time.time}`;
+
+          scheduleNotification(
+            `Take your medicine ${medicine.name} in one hour at ${time.time}`,
+            medicine.name,
+            { id: medicine.id, notificationId },
+            countdown - 3600
+          );
+
+          scheduleNotification(
+            `Take your medicine ${medicine.name} at ${time.time}`,
+            medicine.name,
+            { id: medicine.id, notificationId },
+            countdown
+          );
         });
       });
     });
+  }, [hours, scheduleNotification]);
 
-    return () => {
-      scheduledIds.forEach(id => {
-        // cancelNotification(id);
+  const scheduleAppointmentNotifications = useCallback(() => {
+    groupedAppointments.forEach((group: groupedAppointmentsByDate) => {
+      group.appointments.forEach((appointment: appointment) => {
+        const appointmentDate = new Date(appointment.date);
+        const [hours, minutes] = appointment.time.split(':').map(Number);
+        appointmentDate.setHours(hours, minutes, 0, 0);
+
+        const now = Date.now();
+        const ms = appointmentDate.getTime();
+
+        if (ms < now) return;
+
+        const countdown = (ms - now) / 1000;
+
+        if (countdown > 86400) {
+          scheduleNotification(
+            `You have an appointment with ${appointment.doctor.name} tomorrow at ${appointment.time}`,
+            "Upcoming Appointment",
+            { id: appointment.id },
+            countdown - 86400
+          );
+        }
+
+        if (countdown > 3600) {
+          scheduleNotification(
+            `You have an appointment with ${appointment.doctor.name} in one hour at ${appointment.time}`,
+            "Upcoming Appointment",
+            { id: appointment.id },
+            countdown - 3600
+          );
+        }
+
+        scheduleNotification(
+          `Your appointment with ${appointment.doctor.name} is now`,
+          "Appointment Now",
+          { id: appointment.id },
+          countdown
+        );
       });
-    };
-  }, [hours, currentDate]);
+    });
+  }, [groupedAppointments, scheduleNotification]);
+
+  useEffect(() => {
+    scheduleMedicineNotifications();
+    scheduleAppointmentNotifications();
+  }, [scheduleMedicineNotifications, scheduleAppointmentNotifications]);
 
   // Animation Trigger
   useEffect(() => {
@@ -275,6 +318,12 @@ export default function Home() {
   // ----------------------------------------------------------------------
   // 8. Helper Functions & Event Handlers
   // ----------------------------------------------------------------------
+  const handleDeleteAppointment = async (appointmentId: string) => {
+    const updatedProfileArray = profileArray.map((profile: Profile) => profile.id === selectedProfileId ? { ...profile, appointments: profile.appointments.filter((appointment: appointment) => appointment.id !== appointmentId) } : profile);
+    await saveProfileArray(updatedProfileArray);
+    setProfileArray(updatedProfileArray);
+  }
+
   const saveProfileArray = async (updatedProfileArray: Profile[]) => {
     try {
       await AsyncStorage.setItem('profileArray', JSON.stringify(updatedProfileArray));
@@ -438,41 +487,42 @@ export default function Home() {
                   </ScrollView>
                 </View>
 
-                <View key="3" className="flex flex-col gap-2 w-full h-full ml-5">
-                  <Text className="text-gray-700 font-Milliard-ExtraBold text-3xl rounded-full bg-white px-5 py-2 w-[90%]">Doctor's Appointments</Text>
-                  <View className="rounded-3xl bg-white px-5 py-8 w-[90%]">
-                    <Calendar
-                      calendarMonthId={new Date(currentDate).toISOString().split('T')[0].substring(0, 7) + '-01'}
-                      onCalendarDayPress={dateId => {
-                        console.log('selected day', dateId);
-                      }}
-                      calendarActiveDateRanges={selectedProfile?.appointments.map((appointment: appointment) => ({
-                        startId: new Date(appointment.date).toISOString().split('T')[0],
-                        endId: new Date(appointment.date).toISOString().split('T')[0]
-                      }))}
-                      theme={pinkCalendarTheme}
-                    />
-                  </View>
-                  <View className="max-h-[35%]">
-                    <ScrollView className="flex-grow-0">
-                      {groupedAppointments.map((group, index) => (
-                        <AppointmentBullet
-                          onDelete={() => { }}
-                          key={index}
-                          dayAppointments={group}
-                        />
-                      ))}
-                    </ScrollView>
-                  </View>
-                  <Button placeholder="Doctors Tab" onPress={() => router.push('/doctorFiles')} width='w-[90%]' />
-                  <Button placeholder="Add Appointment" onPress={() => {
-                    if (isDoctorArray) {
-                      router.push('/addAppointment');
-                    } else {
-                      setWarningModalText("Please Add a Doctor First");
-                      setIsWarningModalOpen(true);
-                    }
-                  }} width='w-[90%]' />
+                <View key="3" className="w-full h-full ml-5">
+                  <ScrollView
+                    className="flex-1"
+                    contentContainerClassName='flex flex-col gap-2 pb-4'
+                  >
+                    <Text className="text-gray-700 font-Milliard-ExtraBold text-3xl rounded-full bg-white px-5 py-2 w-[90%]">Doctor's Appointments</Text>
+                    <View className="rounded-3xl bg-white px-5 py-8 w-[90%]">
+                      <Calendar
+                        calendarMonthId={new Date(currentDate).toISOString().split('T')[0].substring(0, 7) + '-01'}
+                        onCalendarDayPress={() => { }}
+                        calendarActiveDateRanges={selectedProfile?.appointments.map((appointment: appointment) => ({
+                          startId: new Date(appointment.date).toISOString().split('T')[0],
+                          endId: new Date(appointment.date).toISOString().split('T')[0]
+                        }))}
+                        theme={pinkCalendarTheme}
+                      />
+                    </View>
+                    {groupedAppointments.map((group, index) => (
+                      <AppointmentBullet
+                        onDelete={handleDeleteAppointment}
+                        key={index}
+                        dayAppointments={group}
+                      />
+                    ))}
+                    <View className="flex flex-row w-[90%] justify-between">
+                      <Button placeholder="Doctors" onPress={() => router.push('/doctorFiles')} width='w-[49%]' />
+                      <Button placeholder="+ Appointment" onPress={() => {
+                        if (isDoctorArray) {
+                          router.push('/addAppointment');
+                        } else {
+                          setWarningModalText("Please Add a Doctor First");
+                          setIsWarningModalOpen(true);
+                        }
+                      }} width='w-[49%]' />
+                    </View>
+                  </ScrollView>
                 </View>
 
               </PagerView>

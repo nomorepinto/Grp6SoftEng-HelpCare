@@ -16,7 +16,7 @@ export default function AppointmentBullet({ dayAppointments, onDelete }: Appoint
     });
 
     return (
-        <View className="flex flex-col w-[90%] bg-white border border-gray-200 rounded-3xl px-5 py-4 mb-3">
+        <View className="flex flex-col w-[90%] bg-white border border-gray-200 rounded-3xl px-5 py-4">
             <Text className="text-gray-700 font-Milliard-ExtraBold text-2xl ml-2 mb-2">{formattedDate}</Text>
             <View className="flex flex-col w-full gap-2">
                 {dayAppointments.appointments.map((appointment, index) => (
@@ -24,7 +24,7 @@ export default function AppointmentBullet({ dayAppointments, onDelete }: Appoint
                         key={index}
                         appointment={appointment}
                         color={appointment.doctor.color}
-                        onDelete={onDelete}
+                        onDelete={() => onDelete(appointment.id)}
                     />
                 ))}
             </View>
