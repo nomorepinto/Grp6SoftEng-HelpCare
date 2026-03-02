@@ -22,6 +22,8 @@ function DoctorBullet({
     onDelete: () => void;
     onEdit: () => void;
 }) {
+
+
     return (
         <View className={`flex flex-col w-full ${doctor.color || 'bg-white'} rounded-3xl px-5 py-4`}>
             <View className="flex flex-row justify-between items-center w-full">

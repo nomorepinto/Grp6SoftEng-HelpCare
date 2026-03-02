@@ -212,7 +212,7 @@ export default function AddMedicine() {
                                 isVisible={showTimePicker}
                                 mode="time"
                                 display="spinner"
-                                minuteInterval={30}
+                                minuteInterval={5}
                                 onConfirm={(date) => {
                                     handleConfirmTime(date);
                                 }}

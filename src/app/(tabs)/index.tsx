@@ -28,7 +28,7 @@ export default function Home() {
   // 1. Setup & Custom Hooks
   // ----------------------------------------------------------------------
   const router = useRouter();
-  const { expoPushToken, notification, scheduleNotification, error } = useNotifications();
+  const { scheduleNotification, cancelAllScheduledNotifications } = useNotifications();
 
   // ----------------------------------------------------------------------
   // 2. State Definitions
@@ -220,7 +220,7 @@ export default function Home() {
 
   // Notifications
 
-  const scheduleMedicineNotifications = useCallback(() => {
+  const scheduleMedicineNotifications = () => {
     hours.forEach((hour: groupedMedsByHours) => {
       hour.medicines.forEach((medicine: medicine) => {
         medicine.times.forEach((time: { time: string; isTaken: boolean }) => {
@@ -231,12 +231,14 @@ export default function Home() {
 
           const notificationId = `${medicine.id}-${time.time}`;
 
-          scheduleNotification(
-            `Take your medicine ${medicine.name} in one hour at ${time.time}`,
-            medicine.name,
-            { id: medicine.id, notificationId },
-            countdown - 3600
-          );
+          if (countdown > 3600) {
+            scheduleNotification(
+              `Take your medicine ${medicine.name} in one hour at ${time.time}`,
+              medicine.name,
+              { id: medicine.id, notificationId },
+              countdown - 3600
+            );
+          }
 
           scheduleNotification(
             `Take your medicine ${medicine.name} at ${time.time}`,
@@ -247,9 +249,9 @@ export default function Home() {
         });
       });
     });
-  }, [hours, scheduleNotification]);
+  }
 
-  const scheduleAppointmentNotifications = useCallback(() => {
+  const scheduleAppointmentNotifications = () => {
     groupedAppointments.forEach((group: groupedAppointmentsByDate) => {
       group.appointments.forEach((appointment: appointment) => {
         const appointmentDate = new Date(appointment.date);
@@ -289,12 +291,17 @@ export default function Home() {
         );
       });
     });
-  }, [groupedAppointments, scheduleNotification]);
+  }
 
-  useEffect(() => {
-    scheduleMedicineNotifications();
-    scheduleAppointmentNotifications();
-  }, [scheduleMedicineNotifications, scheduleAppointmentNotifications]);
+  useFocusEffect(
+    useCallback(() => {
+      if (isLoading || !selectedProfile) return;
+      cancelAllScheduledNotifications();
+      scheduleMedicineNotifications();
+      scheduleAppointmentNotifications();
+    }, [hours, groupedAppointments, scheduleNotification, cancelAllScheduledNotifications, isLoading, selectedProfile])
+  );
+
 
   // Animation Trigger
   useEffect(() => {

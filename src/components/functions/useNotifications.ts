@@ -6,8 +6,8 @@ import Constants from 'expo-constants';
 
 Notifications.setNotificationHandler({
     handleNotification: async () => ({
-        shouldPlaySound: false,
-        shouldSetBadge: false,
+        shouldPlaySound: true,
+        shouldSetBadge: true,
         shouldShowBanner: true,
         shouldShowList: true,
     }),
@@ -55,10 +55,15 @@ export default function useNotifications() {
         []
     );
 
+    const cancelAllScheduledNotifications = useCallback(async () => {
+        await Notifications.cancelAllScheduledNotificationsAsync();
+    }, []);
+
     return {
         expoPushToken,
         notification,
         scheduleNotification,
+        cancelAllScheduledNotifications,
         error,
     };
 }
