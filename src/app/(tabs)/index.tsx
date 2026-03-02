@@ -6,7 +6,6 @@ import NavBar from '@/components/navBar';
 import { Profile, medicine, groupedMedsByHours, groupedMedsByDays, day, sampleMedicine, appointment, groupedAppointmentsByDate, medicineTime } from 'types';
 import DayScheduleBullet from '@/components/dayScheduleBullet';
 import Button from '@/components/button';
-import LightButton from '@/components/lightButton';
 import WeekScheduleBullet from '@/components/weekScheduleBullet';
 import AppointmentBullet from '@/components/appointmentBullet';
 import PagerView from 'react-native-pager-view';
@@ -19,7 +18,6 @@ import { Calendar } from '@marceloterreiro/flash-calendar';
 import WarningModal from '@/components/warningModal';
 import useNotifications from '@/components/functions/useNotifications';
 import HowManyTakenModal from '@/components/howManyTakenModal';
-import { timeStringToCountdown } from '@/components/functions/timeUtils';
 import { pinkCalendarTheme } from '@/components/themes/pinkCalendarTheme';
 
 
@@ -28,7 +26,7 @@ export default function Home() {
   // 1. Setup & Custom Hooks
   // ----------------------------------------------------------------------
   const router = useRouter();
-  const { scheduleNotification, cancelAllScheduledNotifications } = useNotifications();
+  const { scheduleNotification, scheduleAppointmentNotification, cancelAllScheduledNotifications } = useNotifications();
 
   // ----------------------------------------------------------------------
   // 2. State Definitions
@@ -221,75 +219,45 @@ export default function Home() {
   // Notifications
 
   const scheduleMedicineNotifications = () => {
+    if (!selectedProfile) return;
     hours.forEach((hour: groupedMedsByHours) => {
       hour.medicines.forEach((medicine: medicine) => {
-        medicine.times.forEach((time: { time: string; isTaken: boolean }) => {
-          if (time.isTaken) return;
-
-          const countdown = timeStringToCountdown(time.time);
-          if (countdown <= 0) return;
-
-          const notificationId = `${medicine.id}-${time.time}`;
-
-          if (countdown > 3600) {
-            scheduleNotification(
-              `Take your medicine ${medicine.name} in one hour at ${time.time}`,
-              medicine.name,
-              { id: medicine.id, notificationId },
-              countdown - 3600
-            );
-          }
-
-          scheduleNotification(
-            `Take your medicine ${medicine.name} at ${time.time}`,
-            medicine.name,
-            { id: medicine.id, notificationId },
-            countdown
-          );
-        });
+        const time = medicine.times.find(t => t.time === hour.hour);
+        if (!time || time.isTaken) return;
+        const [h, m] = time.time.split(':').map(Number);
+        scheduleNotification(medicine.name, `Take your medicine ${medicine.name} at ${time.time}`, h, m);
       });
     });
   }
 
   const scheduleAppointmentNotifications = () => {
-    groupedAppointments.forEach((group: groupedAppointmentsByDate) => {
-      group.appointments.forEach((appointment: appointment) => {
-        const appointmentDate = new Date(appointment.date);
-        const [hours, minutes] = appointment.time.split(':').map(Number);
-        appointmentDate.setHours(hours, minutes, 0, 0);
+    const selectedProfileLocal = profileArray.find((p: Profile) => p.id === selectedProfileId);
+    if (!selectedProfileLocal) return;
+    selectedProfileLocal.appointments.forEach((appointment: appointment) => {
+      const appointmentDate = new Date(appointment.date);
+      const [h, m] = appointment.time.split(':').map(Number);
 
-        const now = Date.now();
-        const ms = appointmentDate.getTime();
-
-        if (ms < now) return;
-
-        const countdown = (ms - now) / 1000;
-
-        if (countdown > 86400) {
-          scheduleNotification(
-            `You have an appointment with ${appointment.doctor.name} tomorrow at ${appointment.time}`,
-            "Upcoming Appointment",
-            { id: appointment.id },
-            countdown - 86400
-          );
-        }
-
-        if (countdown > 3600) {
-          scheduleNotification(
-            `You have an appointment with ${appointment.doctor.name} in one hour at ${appointment.time}`,
-            "Upcoming Appointment",
-            { id: appointment.id },
-            countdown - 3600
-          );
-        }
-
-        scheduleNotification(
-          `Your appointment with ${appointment.doctor.name} is now`,
-          "Appointment Now",
-          { id: appointment.id },
-          countdown
+      // Day before reminder
+      const dayBefore = new Date(appointmentDate);
+      dayBefore.setDate(dayBefore.getDate() - 1);
+      dayBefore.setHours(h, m, 0, 0);
+      if (dayBefore.getTime() > Date.now()) {
+        scheduleAppointmentNotification(
+          appointment.doctor.name,
+          `You have an appointment with ${appointment.doctor.name} tomorrow at ${appointment.time}`,
+          dayBefore
         );
-      });
+      }
+
+      // Day of reminder
+      appointmentDate.setHours(h, m, 0, 0);
+      if (appointmentDate.getTime() > Date.now()) {
+        scheduleAppointmentNotification(
+          appointment.doctor.name,
+          `Your appointment with ${appointment.doctor.name} is now`,
+          appointmentDate
+        );
+      }
     });
   }
 
@@ -299,7 +267,13 @@ export default function Home() {
       cancelAllScheduledNotifications();
       scheduleMedicineNotifications();
       scheduleAppointmentNotifications();
-    }, [hours, groupedAppointments, scheduleNotification, cancelAllScheduledNotifications, isLoading, selectedProfile])
+    }, [
+      hours,
+      groupedAppointments,
+      isLoading,
+      selectedProfileId,
+      profileArray
+    ])
   );
 
 

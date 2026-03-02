@@ -1,15 +1,11 @@
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
-import { ProgressBar } from '@/components/progressBar';
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'expo-router';
 import Button from '@/components/button';
-import { medicine, day, Profile, doctor } from 'types';
+import { doctor } from 'types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from 'expo-router';
-import clsx from 'clsx';
-import { format24to12 } from '@/components/functions/timeUtils';
-import MedEditModal from "@/components/medEditModal";
 import DoctorEditModal from "@/components/doctorEditModal";
 
 

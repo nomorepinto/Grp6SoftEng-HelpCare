@@ -43,12 +43,26 @@ export default function useNotifications() {
     }, []);
 
     const scheduleNotification = useCallback(
-        async (title: string, body: string, data: Record<string, unknown>, seconds: number) => {
+        async (title: string, body: string, hour: number, minute: number) => {
             await Notifications.scheduleNotificationAsync({
-                content: { title, body, data },
+                content: { title, body },
                 trigger: {
-                    type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
-                    seconds,
+                    type: Notifications.SchedulableTriggerInputTypes.DAILY,
+                    hour,
+                    minute,
+                },
+            });
+        },
+        []
+    );
+
+    const scheduleAppointmentNotification = useCallback(
+        async (title: string, body: string, dateParam: Date) => {
+            await Notifications.scheduleNotificationAsync({
+                content: { title, body },
+                trigger: {
+                    type: Notifications.SchedulableTriggerInputTypes.DATE,
+                    date: dateParam,
                 },
             });
         },
@@ -63,6 +77,7 @@ export default function useNotifications() {
         expoPushToken,
         notification,
         scheduleNotification,
+        scheduleAppointmentNotification,
         cancelAllScheduledNotifications,
         error,
     };

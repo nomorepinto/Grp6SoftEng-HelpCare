@@ -1,3 +1,11 @@
+export type user = {
+    id: string;
+    username: string;
+    email: string;
+    password: string;
+    profileArray: Profile[];
+}
+
 export type day = "M" | "T" | "W" | "Th" | "F" | "S" | "Su";
 
 export const sampleMedicine: medicine = {
