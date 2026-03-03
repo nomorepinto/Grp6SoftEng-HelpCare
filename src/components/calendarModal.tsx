@@ -80,7 +80,7 @@ export default function CalendarModal({
             visible={isOpen}
             onRequestClose={onClose}
         >
-            <View className="flex-1 justify-end bg-black/40">
+            <View className="flex-1 justify-end">
                 <View className="bg-white w-full rounded-t-3xl p-6 shadow-2xl h-[70%]">
                     <View className="flex-row justify-between items-center mb-6">
                         <Text className="text-pink-500 text-3xl font-Milliard-ExtraBold">
