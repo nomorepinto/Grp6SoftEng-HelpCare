@@ -17,14 +17,17 @@ export default function useNotifications() {
     const [expoPushToken, setExpoPushToken] = useState('');
     const [notification, setNotification] = useState<Notifications.Notification | undefined>();
     const [error, setError] = useState<string | null>(null);
+    const [isRegistered, setIsRegistered] = useState(false);
 
     useEffect(() => {
         registerForPushNotificationsAsync()
             .then(result => {
                 if (result?.token) {
                     setExpoPushToken(result.token);
+                    setIsRegistered(true);
                 } else if (result?.error) {
                     setError(result.error);
+                    setIsRegistered(false);
                 }
             });
 
@@ -43,13 +46,14 @@ export default function useNotifications() {
     }, []);
 
     const scheduleNotification = useCallback(
-        async (title: string, body: string, hour: number, minute: number) => {
+        async (title: string, body: string, hour: number, minute: number, weekday: number) => {
             await Notifications.scheduleNotificationAsync({
                 content: { title, body },
                 trigger: {
-                    type: Notifications.SchedulableTriggerInputTypes.DAILY,
+                    type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
                     hour,
                     minute,
+                    weekday,
                 },
             });
         },
@@ -80,6 +84,7 @@ export default function useNotifications() {
         scheduleAppointmentNotification,
         cancelAllScheduledNotifications,
         error,
+        isRegistered
     };
 }
 

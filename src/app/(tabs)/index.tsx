@@ -19,6 +19,7 @@ import WarningModal from '@/components/warningModal';
 import useNotifications from '@/components/functions/useNotifications';
 import HowManyTakenModal from '@/components/howManyTakenModal';
 import { pinkCalendarTheme } from '@/components/themes/pinkCalendarTheme';
+import AskNotificationModal from '@/components/askNotificationModal';
 
 
 export default function Home() {
@@ -26,7 +27,7 @@ export default function Home() {
   // 1. Setup & Custom Hooks
   // ----------------------------------------------------------------------
   const router = useRouter();
-  const { scheduleNotification, scheduleAppointmentNotification, cancelAllScheduledNotifications } = useNotifications();
+  const { scheduleNotification, scheduleAppointmentNotification, cancelAllScheduledNotifications, isRegistered } = useNotifications();
 
   // ----------------------------------------------------------------------
   // 2. State Definitions
@@ -37,12 +38,16 @@ export default function Home() {
   const [currentDate, setCurrentDate] = useState(Date.now());
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
   const [isDoctorArray, setIsDoctorArray] = useState<boolean>(false);
+  const [appointmentsArray, setAppointmentsArray] = useState<appointment[]>([]); //for notifications useFocusEffect Only
+  const [medicineArray, setMedicineArray] = useState<medicine[]>([]); //for notifications useFocusEffect Only
 
   // Modal States
   const [isMedInfoModalOpen, setIsMedInfoModalOpen] = useState(false);
   const [isWarningModalOpen, setIsWarningModalOpen] = useState(false);
   const [warningModalText, setWarningModalText] = useState("");
   const [isHowManyTakenModalOpen, setIsHowManyTakenModalOpen] = useState(false);
+  const [isAskNotificationModalOpen, setIsAskNotificationModalOpen] = useState(false);
+  const [askAgainNotifications, setAskAgainNotifications] = useState<boolean>(true);
 
   // Selection States
   const [selectedMed, setSelectedMed] = useState<medicine | null>(null);
@@ -164,6 +169,8 @@ export default function Home() {
             console.log("Profiles fetched successfully [index.tsx]");
             setProfileArray(JSON.parse(storedProfiles));
             setSelectedProfileId(JSON.parse(storedProfiles).find((profile: Profile) => profile.isSelected)?.id);
+            setMedicineArray(JSON.parse(storedProfiles).find((profile: Profile) => profile.isSelected)?.medicineSchedule);
+            setAppointmentsArray(JSON.parse(storedProfiles).find((profile: Profile) => profile.isSelected)?.appointments);
           } else {
             router.replace('/createProfile');
           }
@@ -218,22 +225,29 @@ export default function Home() {
 
   // Notifications
 
-  const scheduleMedicineNotifications = () => {
+  const scheduleMedicineNotifications = async () => {
     if (!selectedProfile) return;
-    hours.forEach((hour: groupedMedsByHours) => {
-      hour.medicines.forEach((medicine: medicine) => {
-        const time = medicine.times.find(t => t.time === hour.hour);
-        if (!time || time.isTaken) return;
-        const [h, m] = time.time.split(':').map(Number);
-        scheduleNotification(medicine.name, `Take your medicine ${medicine.name} at ${time.time}`, h, m);
-      });
-    });
-  }
+    for (const medicine of selectedProfile.medicineSchedule) {
+      for (const d of medicine.days) {
+        const weekday = dayAbbreviationMap.indexOf(d) + 1;
+        for (const time of medicine.times) {
+          const [h, m] = time.time.split(':').map(Number);
+          await scheduleNotification(
+            medicine.name,
+            `Take your medicine ${medicine.name} at ${time.time}`,
+            h,
+            m,
+            weekday
+          );
+        }
+      }
+    }
+  };
 
-  const scheduleAppointmentNotifications = () => {
+  const scheduleAppointmentNotifications = async () => {
     const selectedProfileLocal = profileArray.find((p: Profile) => p.id === selectedProfileId);
     if (!selectedProfileLocal) return;
-    selectedProfileLocal.appointments.forEach((appointment: appointment) => {
+    for (const appointment of selectedProfileLocal.appointments) {
       const appointmentDate = new Date(appointment.date);
       const [h, m] = appointment.time.split(':').map(Number);
 
@@ -242,7 +256,7 @@ export default function Home() {
       dayBefore.setDate(dayBefore.getDate() - 1);
       dayBefore.setHours(h, m, 0, 0);
       if (dayBefore.getTime() > Date.now()) {
-        scheduleAppointmentNotification(
+        await scheduleAppointmentNotification(
           appointment.doctor.name,
           `You have an appointment with ${appointment.doctor.name} tomorrow at ${appointment.time}`,
           dayBefore
@@ -252,39 +266,55 @@ export default function Home() {
       // Day of reminder
       appointmentDate.setHours(h, m, 0, 0);
       if (appointmentDate.getTime() > Date.now()) {
-        scheduleAppointmentNotification(
+        await scheduleAppointmentNotification(
           appointment.doctor.name,
           `Your appointment with ${appointment.doctor.name} is now`,
           appointmentDate
         );
       }
-    });
-  }
+    }
+  };
+
+  useEffect(() => {
+    const getAskAgainNotifications = async () => {
+      const askAgain = await AsyncStorage.getItem("askAgain");
+      if (askAgain) {
+        setAskAgainNotifications(askAgain === "true");
+      }
+    };
+    getAskAgainNotifications();
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
       if (isLoading || !selectedProfile) return;
-      cancelAllScheduledNotifications();
-      scheduleMedicineNotifications();
-      scheduleAppointmentNotifications();
+      if (!isRegistered && askAgainNotifications) {
+        setIsAskNotificationModalOpen(true);
+      }
+      const setupNotifications = async () => {
+        await cancelAllScheduledNotifications();
+        await scheduleMedicineNotifications();
+        await scheduleAppointmentNotifications();
+      };
+      setupNotifications();
     }, [
-      hours,
-      groupedAppointments,
+      selectedProfile,
       isLoading,
       selectedProfileId,
-      profileArray
+      medicineArray,
+      appointmentsArray
     ])
   );
 
 
   // Animation Trigger
   useEffect(() => {
-    if (isMedInfoModalOpen || isWarningModalOpen || isHowManyTakenModalOpen) {
+    if (isMedInfoModalOpen || isWarningModalOpen || isHowManyTakenModalOpen || isAskNotificationModalOpen) {
       opacity.value = withTiming(0.25);
     } else {
       opacity.value = withTiming(1);
     }
-  }, [isMedInfoModalOpen, isWarningModalOpen, isHowManyTakenModalOpen]);
+  }, [isMedInfoModalOpen, isWarningModalOpen, isHowManyTakenModalOpen, isAskNotificationModalOpen]);
 
 
   // ----------------------------------------------------------------------
@@ -514,6 +544,7 @@ export default function Home() {
         <WarningModal isOpen={isWarningModalOpen} onClose={() => setIsWarningModalOpen(false)} header="Warning" text={warningModalText} />
         <MedInfoModal isOpen={isMedInfoModalOpen} onClose={() => setIsMedInfoModalOpen(false)} medicine={selectedMed ?? sampleMedicine} />
         <HowManyTakenModal isOpen={isHowManyTakenModalOpen} onClose={() => setIsHowManyTakenModalOpen(false)} selectedHour={selectedHour ?? { hour: "", medicines: [] }} selectedMedicineID={selectedMedicineID ?? ""} takeMedicine={takeMedicine} />
+        <AskNotificationModal isOpen={isAskNotificationModalOpen} onClose={() => setIsAskNotificationModalOpen(false)} neverAskAgain={() => { AsyncStorage.setItem("askAgain", "false"); setAskAgainNotifications(false); }} />
       </View>
       <View className="flex flex-col items-center pt-5 pb-8 bg-white">
         <Button placeholder="Med Stock" onPress={() => router.push('/medStock')} width='w-3/4' />
