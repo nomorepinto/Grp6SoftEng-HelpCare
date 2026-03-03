@@ -1,6 +1,6 @@
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Text, View, StyleSheet, Image, ScrollView, Pressable, ActivityIndicator } from 'react-native';
+import { Text, View, StyleSheet, Image, ScrollView, Pressable, ActivityIndicator, Platform } from 'react-native';
 import Button from '@/components/button';
 import WarningModal from '@/components/warningModal';
 import PhotoModal from '@/components/photoModal';
@@ -10,6 +10,7 @@ import { medicine, Profile, sampleMedicine } from 'types';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
+import { Linking } from 'react-native';
 
 
 
@@ -27,6 +28,21 @@ export default function PrescriptionPic() {
 
     const opacity = useSharedValue(0);
 
+    const canRequestAgain = permission?.canAskAgain;
+
+    const handlePermissionAction = async () => {
+        if (canRequestAgain) {
+            // If we can still trigger the system prompt
+            await requestPermission();
+        } else {
+            // If they permanently denied, we MUST go to settings
+            if (Platform.OS === 'ios') {
+                Linking.openURL('app-settings:');
+            } else {
+                Linking.openSettings();
+            }
+        }
+    };
 
     const animatedStyle = useAnimatedStyle(() => {
         return {
@@ -98,8 +114,14 @@ export default function PrescriptionPic() {
 
     useFocusEffect(
         useCallback(() => {
+            // Check if we need to show the tutorial
             setTutorialModalVisible(true);
-        }, [])
+
+            // Only auto-request if it hasn't been determined yet
+            if (permission?.status === 'undetermined') {
+                requestPermission();
+            }
+        }, [permission])
     );
 
     if (!permission) {
@@ -114,7 +136,9 @@ export default function PrescriptionPic() {
                 <Text className="text-center pb-6 text-pink-500 font-Milliard-Medium text-xl">
                     We need your permission to show the camera
                 </Text>
-                <Button placeholder="Grant Permission" onPress={requestPermission} width="w-3/4" />
+                <Button placeholder="Grant Permission"
+                    onPress={handlePermissionAction}
+                    width="w-3/4" />
                 <Button placeholder="Skip" onPress={() => router.push("/medStock")} width="w-3/4 mt-2" />
             </View>
         );
