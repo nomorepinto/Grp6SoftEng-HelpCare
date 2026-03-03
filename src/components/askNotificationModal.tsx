@@ -36,7 +36,7 @@ export default function AskNotificationModal({ isOpen, onClose, neverAskAgain }:
                         Please enable notifications to receive reminders about your medicine and appointments.
                     </Text>
 
-                    <View className="flex flex-row justify-between w-full">
+                    <View className="flex flex-row justify-between w-full mb-2">
                         <Button
                             placeholder="Close"
                             onPress={() => { onClose(); }}
@@ -52,7 +52,7 @@ export default function AskNotificationModal({ isOpen, onClose, neverAskAgain }:
                         <Button
                             placeholder="Don't ask again"
                             onPress={() => { onClose(); neverAskAgain(); }}
-                            width="w-[48%]"
+                            width="w-full"
                         />
                     </View>
                 </View>
