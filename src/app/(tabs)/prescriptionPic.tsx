@@ -203,17 +203,20 @@ export default function PrescriptionPic() {
                 </View>
                 <View className="flex flex-col gap-2 justify-center items-center w-full">
                     <Button placeholder="Take Picture" onPress={() => takePicture()} width="w-full" />
-                    <Button placeholder="Open Gallery" onPress={() => openGallery()} width="w-full" />
-                    <Button placeholder="Upload Photos"
-                        onPress={async () => {
-                            if (photos.length > 0) {
-                                await uploadPhotos(photos);
-                            } else {
-                                setWarningText("No photos taken yet");
-                                setWarningModalVisible(true);
-                            }
-                        }}
-                        width="w-full" />
+                    <View className="flex flex-row gap-2 justify-center items-center w-full">
+                        <Button placeholder="Open Gallery" onPress={() => openGallery()} width="w-[48%]" />
+                        <Button placeholder="Upload Photos"
+                            onPress={async () => {
+                                if (photos.length > 0) {
+                                    await uploadPhotos(photos);
+                                } else {
+                                    setWarningText("No photos taken yet");
+                                    setWarningModalVisible(true);
+                                }
+                            }}
+                            width="w-[48%]" />
+                    </View>
+
 
                 </View>
                 <View className="flex flex-col gap-2 justify-center items-end w-full mt-2">
