@@ -11,6 +11,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { Linking } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 
 
 
@@ -112,6 +113,21 @@ export default function PrescriptionPic() {
         }
     }
 
+    async function openGallery() {
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ['images'],
+            allowsEditing: true,
+            quality: 1,
+            base64: true,
+        });
+
+        if (!result.canceled) {
+            const pickedImage = result.assets[0];
+            setPhotos([...photos, { uri: pickedImage.uri, base64: pickedImage.base64 }]);
+            console.log("Photo Picked from Gallery");
+        }
+    }
+
     useFocusEffect(
         useCallback(() => {
             // Check if we need to show the tutorial
@@ -187,6 +203,7 @@ export default function PrescriptionPic() {
                 </View>
                 <View className="flex flex-col gap-2 justify-center items-center w-full">
                     <Button placeholder="Take Picture" onPress={() => takePicture()} width="w-full" />
+                    <Button placeholder="Open Gallery" onPress={() => openGallery()} width="w-full" />
                     <Button placeholder="Upload Photos"
                         onPress={async () => {
                             if (photos.length > 0) {

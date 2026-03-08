@@ -2,6 +2,8 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { medicine, sampleMedicine, medicineTime } from '../../../types';
 import * as Crypto from 'expo-crypto';
+import * as Network from 'expo-network';
+import { Alert } from 'react-native';
 
 const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.EXPO_PUBLIC_GEMINI_API_KEY}`;
 
@@ -19,6 +21,11 @@ const colorArray = [
 let colorCount = 0;
 
 export const testGemini = async () => {
+    const networkState = await Network.getNetworkStateAsync();
+    if (!networkState.isConnected) {
+        Alert.alert("No Internet", "Please connect to the internet to perform this action.");
+        return;
+    }
     try {
         const requestBody = {
             contents: [{
@@ -39,6 +46,11 @@ export const testGemini = async () => {
 }
 
 export const askGemini = async (dataBase64: string): Promise<medicine[]> => {
+    const networkState = await Network.getNetworkStateAsync();
+    if (!networkState.isConnected) {
+        Alert.alert("No Internet", "Please connect to the internet to use AI prescription extraction.");
+        return [];
+    }
     try {
         const prompt = `Act as a medical data extractor. Analyze the image and return a JSON array of medicine objects.
     

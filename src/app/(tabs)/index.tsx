@@ -27,7 +27,7 @@ export default function Home() {
   // 1. Setup & Custom Hooks
   // ----------------------------------------------------------------------
   const router = useRouter();
-  const { scheduleNotification, scheduleAppointmentNotification, cancelAllScheduledNotifications, isRegistered } = useNotifications();
+  const { scheduleNotification, scheduleAppointmentNotification, cancelAllScheduledNotifications, scheduleInventoryNotification, isRegistered } = useNotifications();
 
   // ----------------------------------------------------------------------
   // 2. State Definitions
@@ -244,6 +244,28 @@ export default function Home() {
     }
   };
 
+  const scheduleMedicineInventoryNotifications = async () => {
+    if (!selectedProfile) return;
+    for (const medicine of selectedProfile.medicineSchedule) {
+      const percentageRemaining = (medicine.amountRemaining / medicine.totalQuantity) * 100;
+      if (percentageRemaining <= 20) {
+        await scheduleInventoryNotification(
+          "Low Medicine Stock",
+          `Critical: Your ${medicine.name} is at ${percentageRemaining.toFixed(0)}% (${medicine.amountRemaining} left). Please refill soon.`,
+          10, // morning check at 10 AM
+          0
+        );
+      } else if (percentageRemaining <= 50) {
+        await scheduleInventoryNotification(
+          "Medicine Stock Warning",
+          `Warning: Your ${medicine.name} is at ${percentageRemaining.toFixed(0)}% (${medicine.amountRemaining} left).`,
+          10, // morning check at 10 AM
+          0
+        );
+      }
+    }
+  };
+
   const scheduleAppointmentNotifications = async () => {
     const selectedProfileLocal = profileArray.find((p: Profile) => p.id === selectedProfileId);
     if (!selectedProfileLocal) return;
@@ -295,6 +317,7 @@ export default function Home() {
         await cancelAllScheduledNotifications();
         await scheduleMedicineNotifications();
         await scheduleAppointmentNotifications();
+        await scheduleMedicineInventoryNotifications();
       };
       setupNotifications();
     }, [

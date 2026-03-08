@@ -73,6 +73,20 @@ export default function useNotifications() {
         []
     );
 
+    const scheduleInventoryNotification = useCallback(
+        async (title: string, body: string, hour: number, minute: number) => {
+            await Notifications.scheduleNotificationAsync({
+                content: { title, body },
+                trigger: {
+                    type: Notifications.SchedulableTriggerInputTypes.DAILY,
+                    hour,
+                    minute,
+                },
+            });
+        },
+        []
+    );
+
     const cancelAllScheduledNotifications = useCallback(async () => {
         await Notifications.cancelAllScheduledNotificationsAsync();
     }, []);
@@ -83,6 +97,7 @@ export default function useNotifications() {
         scheduleNotification,
         scheduleAppointmentNotification,
         cancelAllScheduledNotifications,
+        scheduleInventoryNotification,
         error,
         isRegistered
     };
