@@ -18,10 +18,12 @@ export default function useNotifications() {
     const [notification, setNotification] = useState<Notifications.Notification | undefined>();
     const [error, setError] = useState<string | null>(null);
     const [isRegistered, setIsRegistered] = useState(false);
+    const [hasPermission, setHasPermission] = useState(false);
 
     useEffect(() => {
         registerForPushNotificationsAsync()
             .then(result => {
+                setHasPermission(result?.status === 'granted');
                 if (result?.token) {
                     setExpoPushToken(result.token);
                     setIsRegistered(true);
@@ -99,7 +101,8 @@ export default function useNotifications() {
         cancelAllScheduledNotifications,
         scheduleInventoryNotification,
         error,
-        isRegistered
+        isRegistered,
+        hasPermission
     };
 }
 
@@ -113,10 +116,6 @@ async function registerForPushNotificationsAsync() {
         });
     }
 
-    if (!Device.isDevice) {
-        return { error: 'Must use physical device for Push Notifications' };
-    }
-
     const { status: existingStatus } = await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
 
@@ -126,7 +125,11 @@ async function registerForPushNotificationsAsync() {
     }
 
     if (finalStatus !== 'granted') {
-        return { error: 'Failed to get push notification permissions' };
+        return { status: finalStatus, error: 'Failed to get push notification permissions' };
+    }
+
+    if (!Device.isDevice) {
+        return { status: finalStatus, error: 'Must use physical device for Push Notifications' };
     }
 
     try {
@@ -138,8 +141,8 @@ async function registerForPushNotificationsAsync() {
         }
 
         const token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
-        return { token };
+        return { status: finalStatus, token };
     } catch (e) {
-        return { error: e instanceof Error ? e.message : String(e) };
+        return { status: finalStatus, error: e instanceof Error ? e.message : String(e) };
     }
 }

@@ -27,7 +27,7 @@ export default function Home() {
   // 1. Setup & Custom Hooks
   // ----------------------------------------------------------------------
   const router = useRouter();
-  const { scheduleNotification, scheduleAppointmentNotification, cancelAllScheduledNotifications, scheduleInventoryNotification, isRegistered } = useNotifications();
+  const { scheduleNotification, scheduleAppointmentNotification, cancelAllScheduledNotifications, scheduleInventoryNotification, isRegistered, hasPermission } = useNotifications();
 
   // ----------------------------------------------------------------------
   // 2. State Definitions
@@ -310,7 +310,7 @@ export default function Home() {
   useFocusEffect(
     useCallback(() => {
       if (isLoading || !selectedProfile) return;
-      if (!isRegistered && askAgainNotifications) {
+      if (!hasPermission && askAgainNotifications) {
         setIsAskNotificationModalOpen(true);
       }
       const setupNotifications = async () => {
@@ -325,7 +325,8 @@ export default function Home() {
       isLoading,
       selectedProfileId,
       medicineArray,
-      appointmentsArray
+      appointmentsArray,
+      hasPermission
     ])
   );
 
